@@ -1,6 +1,7 @@
 import os
 import gdal
 import seaborn as sns
+from itertools import chain
 from collections import defaultdict
 from layer.layer import Layer
 from animator.frame import Frame
@@ -29,10 +30,8 @@ class LayerCollection:
             # Interpreted layers where the pixel values have meaning, i.e. a disturbance type,
             # get their pixel values normalized across the whole collection.
             unique_values = set(chain(*(layer.interpretation.values() for layer in working_layers)))
-            common_interpretation = {i: value for value in enumerate(unique_values, 1)}
-            working_layers = [
-                layer.reclassify("{}_reclass{}".format(*os.path.splitext(layer.path)), common_interpretation)
-                for layer in working_layers]
+            common_interpretation = {i: value for i, value in enumerate(unique_values, 1)}
+            working_layers = [layer.reclassify(common_interpretation) for layer in working_layers]
 
         # Merge the layers together by year if this is a fragmented collection of layers,
         # i.e. fire and harvest in separate files.
@@ -75,7 +74,7 @@ class LayerCollection:
             rgb_colors = ((int(r_pct * 255), int(g_pct * 255), int(b_pct * 255))
                           for r_pct, g_pct, b_pct in rgb_pct_colors)
 
-            for pixel_value, interpreted_value in interpretation:
+            for pixel_value, interpreted_value in interpretation.items():
                 legend[pixel_value] = {
                     "label": interpreted_value,
                     "color": next(rgb_colors)}
