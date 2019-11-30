@@ -12,9 +12,9 @@ class Animator:
         self._output_path = output_path
 
     def render(start_year, end_year, bounding_box=None):
-        disturbance_frames, disturbance_legend = disturbances.render()
+        disturbance_frames, disturbance_legend = disturbances.render(bounding_box)
         for indicator in self.indicators:
-            indicator_frames, indicator_legend = indicator.render_map_frames()
+            indicator_frames, indicator_legend = indicator.render_map_frames(bounding_box)
             graph_frames = indicator.render_graph_frames()
             legend_frame = Legend(disturbance_legend, indicator_legend).render()
             for year in range(start_year, end_year + 1):
