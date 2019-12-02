@@ -16,6 +16,10 @@ class LayerCollection:
         self._layers = layers or []
         self._palette = palette
 
+    @property
+    def empty(self):
+        return not self._layers
+
     def append(self, layer):
         self._layers.append(layer)
 

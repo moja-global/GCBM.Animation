@@ -1,10 +1,13 @@
+import os
 import numpy as np
+from glob import glob
 from PIL import Image
 from enum import Enum
 from contextlib import contextmanager
 from matplotlib import image as mpimg
 from matplotlib import pyplot as plt
 from matplotlib import gridspec
+from layer.layer import Layer
 from layer.layercollection import LayerCollection
 from util.tempfile import mktmp
 from animator.frame import Frame
@@ -18,12 +21,14 @@ class Units(Enum):
 
 class Indicator:
 
-    def __init__(self, results_database, database_indicator, layers, title=None, units=Units.Default):
+    def __init__(self, results_database, database_indicator, layer_pattern,
+                 title=None, units=Units.Default, palette="Greens"):
         self._results_database = results_database
         self._database_indicator = database_indicator
-        self._layers = layers
+        self._layer_pattern = layer_pattern
         self._title = title or database_indicator
         self._units = units
+        self._palette = palette
 
     @property
     def title(self):
@@ -31,8 +36,9 @@ class Indicator:
     
     def render_map_frames(self, bounding_box=None):
         start_year, end_year = self._results_database.simulation_years
+        layers = self._find_layers()
         
-        return self._layers.render(bounding_box, start_year, end_year)
+        return layers.render(bounding_box, start_year, end_year)
 
     def render_graph_frames(self, bounding_box=None):
         units, units_label = self._units.value
@@ -94,3 +100,15 @@ class Indicator:
         eps_image.close()
        
         return output_path
+
+    def _find_layers(self):
+        layers = LayerCollection(palette=self._palette)
+        for layer_path in glob(self._layer_pattern):
+            year = os.path.splitext(layer_path)[0][-4:]
+            layer = Layer(layer_path, year)
+            layers.append(layer)
+
+        if layers.empty:
+            raise IOError(f"No spatial output found for pattern: {self._layer_pattern}")
+
+        return layers

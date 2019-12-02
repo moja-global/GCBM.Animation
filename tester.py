@@ -7,6 +7,7 @@ from layer.boundingbox import BoundingBox
 from util.disturbancelayerconfigurer import DisturbanceLayerConfigurer
 from database.sqlitegcbmresultsdatabase import SqliteGcbmResultsDatabase
 from animator.indicator import Indicator
+from animator.indicator import Units
 
 # Test a plain old LayerCollection - bounding box is the first layer found.
 layers = LayerCollection(palette="Reds")
@@ -32,13 +33,7 @@ for rendered_layer in disturbance_layers.render(bounding_box=bbox, start_year=20
 
 # Test an Indioator.
 results_db = SqliteGcbmResultsDatabase(r"C:\Projects\Standalone_Template\processed_output\compiled_gcbm_output.db")
-npp_layers = LayerCollection(palette="Greens")
-for layer_path in glob(r"C:\Projects\Standalone_Template\processed_output\spatial\NPP*.tiff"):
-    year = os.path.splitext(layer_path)[0][-4:]
-    layer = Layer(layer_path, year)
-    npp_layers.append(layer)
-
-indicator = Indicator(results_db, "NPP", npp_layers)
+indicator = Indicator(results_db, "NPP", r"C:\Projects\Standalone_Template\processed_output\spatial\NPP*.tiff", units=Units.Ktc, palette="Reds")
 
 # Render using the bounding box from earlier and save the output for viewing.
 for frame in indicator.render_map_frames(bounding_box=bbox)[0]:
