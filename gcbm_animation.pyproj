@@ -22,15 +22,43 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="animator\animator.py" />
+    <Compile Include="animator\frame.py" />
     <Compile Include="animator\indicator.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="animator\layout\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="animator\legend.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="animator\layout\quadrantlayout.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="animator\__init__.py" />
+    <Compile Include="database\gcbmresultsdatabase.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="database\sqlitegcbmresultsdatabase.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="database\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="gcbm_animation.py" />
+    <Compile Include="layer\boundingbox.py" />
+    <Compile Include="layer\layer.py" />
+    <Compile Include="layer\layercollection.py" />
+    <Compile Include="layer\__init__.py" />
+    <Compile Include="util\disturbancelayerconfigurer.py" />
+    <Compile Include="util\tempfile.py" />
     <Compile Include="util\__init__.py" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="animator\" />
+    <Folder Include="animator\layout\" />
+    <Folder Include="database\" />
+    <Folder Include="layer\" />
     <Folder Include="util\" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />

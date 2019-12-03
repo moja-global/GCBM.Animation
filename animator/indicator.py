@@ -14,15 +14,18 @@ from animator.frame import Frame
 
 class Units(Enum):
     
-    Default = 1,   "tC/yr"
-    Ktc     = 1e3, "KtC/yr"
-    Mtc     = 1e6, "MtC/yr"
-
+    Blank    = 1,   ""
+    Tc       = 1,   "tC/yr"
+    Ktc      = 1e3, "KtC/yr"
+    Mtc      = 1e6, "MtC/yr"
+    TcPerHa  = 1,   "tC/ha/yr"
+    KtcPerHa = 1e3, "KtC/ha/yr"
+    MtcPerHa = 1e6, "MtC/ha/yr"
 
 class Indicator:
 
     def __init__(self, results_database, database_indicator, layer_pattern,
-                 title=None, units=Units.Default, palette="Greens"):
+                 title=None, units=Units.Tc, palette="Greens"):
         self._results_database = results_database
         self._database_indicator = database_indicator
         self._layer_pattern = layer_pattern
@@ -33,6 +36,10 @@ class Indicator:
     @property
     def title(self):
         return self._title
+
+    @property
+    def units(self):
+        return self._units
     
     def render_map_frames(self, bounding_box=None):
         start_year, end_year = self._results_database.simulation_years
@@ -40,7 +47,7 @@ class Indicator:
         
         return layers.render(bounding_box, start_year, end_year)
 
-    def render_graph_frames(self, bounding_box=None):
+    def render_graph_frames(self):
         units, units_label = self._units.value
         indicator_data = self._results_database.get_annual_result(self._database_indicator, units)
 
@@ -51,8 +58,8 @@ class Indicator:
         for i, year in enumerate(years):
             with self._figure(figsize=(10, 5)) as fig:
                 y_label = f"{self._title} ({units_label})"
-                plt.xlabel("Years", fontweight="bold")
-                plt.ylabel(y_label, fontweight="bold")
+                plt.xlabel("Years", fontweight="bold", fontsize=14)
+                plt.ylabel(y_label, fontweight="bold", fontsize=14)
                 plt.axhline(0, color="darkgray")
                 plt.plot(years, values, marker="o", linestyle="--", color="navy")
                 
@@ -60,7 +67,9 @@ class Indicator:
                 plt.plot(year, indicator_data[year], marker="o", linestyle="--", color="b", markersize=15)
 
                 plt.axis([None, None, min(values) - 0.1, max(values) + 0.1])
-                plt.tick_params(axis="both", labelsize=12)
+                plt.tick_params(axis="both", labelsize=14)
+                plt.xticks(fontsize=12, fontweight="bold")
+                plt.yticks(fontsize=12, fontweight="bold")
 
                 # Remove scientific notation.
                 ax = plt.gca()
@@ -76,10 +85,9 @@ class Indicator:
                 shaded_values[shaded_years > year] = np.nan
                 plt.fill_between(shaded_years, shaded_values, facecolor="gainsboro")
 
-                out_eps = mktmp(suffix=".eps")
-                fig.savefig(out_eps, bbox_inches="tight", dpi=300)
-                out_png = self._export_to_png(out_eps)
-                frames.append(Frame(year, out_png))
+                out_file = mktmp(suffix=".png")
+                fig.savefig(out_file, bbox_inches="tight", dpi=300)
+                frames.append(Frame(year, out_file))
 
         return frames
 
@@ -91,16 +99,7 @@ class Indicator:
         finally:
             plt.close(fig)
             plt.clf()
-    
-    def _export_to_png(self, eps):
-        eps_image = Image.open(eps)
-        output_path = mktmp(suffix=".png")
-        eps_image.load(scale=7)
-        eps_image.save(output_path)
-        eps_image.close()
        
-        return output_path
-
     def _find_layers(self):
         layers = LayerCollection(palette=self._palette)
         for layer_path in glob(self._layer_pattern):

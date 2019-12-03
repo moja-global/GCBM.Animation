@@ -26,3 +26,22 @@ class Frame:
             Image.alpha_composite(this_image, other_image).save(out_path)
 
         return Frame(self._year, out_path)
+
+    def merge_horizontal(self, *frames):
+        images = [Image.open(self._path)] + [Image.open(frame.path) for frame in frames]
+        widths, heights = zip(*(image.size for image in images))
+
+        total_width = sum(widths)
+        max_height = max(heights)
+
+        merged_image = Image.new("RGBA", (total_width, max_height), color=(255, 255, 255, 255))
+
+        x_offset = 0
+        for image in images:
+            merged_image.paste(image, (x_offset, 0))
+            x_offset += image.size[0]
+
+        out_path = mktmp(suffix=".png")
+        merged_image.save(out_path)
+
+        return Frame(self._year, out_path)
