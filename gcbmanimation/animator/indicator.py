@@ -11,6 +11,7 @@ from gcbmanimation.layer.layer import Layer
 from gcbmanimation.layer.layercollection import LayerCollection
 from gcbmanimation.util.tempfile import mktmp
 from gcbmanimation.animator.frame import Frame
+Image.MAX_IMAGE_PIXELS = None
 
 class Units(Enum):
     

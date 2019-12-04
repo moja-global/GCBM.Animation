@@ -1,5 +1,6 @@
 from PIL import Image
 from gcbmanimation.util.tempfile import mktmp
+Image.MAX_IMAGE_PIXELS = None
 
 class Frame:
 

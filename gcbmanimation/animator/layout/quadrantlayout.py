@@ -3,6 +3,7 @@ from PIL import ImageFont
 from PIL import ImageDraw
 from gcbmanimation.animator.frame import Frame
 from gcbmanimation.util.tempfile import mktmp
+Image.MAX_IMAGE_PIXELS = None
 
 class Quadrant:
 
