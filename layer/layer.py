@@ -124,6 +124,8 @@ class Layer:
             color_table.write(f"nv 255,255,255,{0 if transparent else 255}\n")
             color_table.write(f"0 255,255,255,{0 if transparent else 255}\n")
 
+            near_zero_value = None
+            near_zero_color = None
             for value, entry in legend.items():
                 color_str = ",".join((f"{v}" for v in entry["color"]))
                 if isinstance(value, tuple):
@@ -131,13 +133,25 @@ class Layer:
                     if range_min is not None:
                         color_table.write(f"{range_min} {color_str},255\n")
                     if range_max is not None:
-                        color_table.write(f"{range_max - 1e-6} {color_str},255\n")
+                        color_table.write(f"{range_max} {color_str},255\n")
                     if (    range_min is not None and range_min < 0
                         and range_max is not None and range_max > 0
                     ):
-                        color_table.write(f"{-1e-6} {color_str}\n{1e-6} {color_str},255\n")
+                        near_zero_value = 0
+                        near_zero_color = color_str
+                    else:
+                        min_val = min((abs(range_min), abs(range_max)))
+                        if near_zero_value is None or min_val < near_zero_value:
+                            near_zero_value = min_val
+                            near_zero_color = color_str
                 else:
                     color_table.write(f"{value} {color_str},255\n")
+                    if near_zero_value is None or abs(value) < near_zero_value:
+                        near_zero_value = abs(value)
+                        near_zero_color = color_str
+            
+            # Guard the color entry closest to 0 against the 0/nodata color.
+            color_table.write(f"{-1e-3} {near_zero_color},255\n{1e-3} {near_zero_color},255\n")
 
         working_layer = self if not bounding_box else bounding_box.crop(self)
         rendered_layer_path = mktmp(suffix=".png")
@@ -148,7 +162,8 @@ class Layer:
             color_table.name,
             rendered_layer_path,
             "-q",
-            "-alpha"])
+            "-alpha",
+            "-nearest_color_entry"])
 
         return Frame(self._year, rendered_layer_path)
 

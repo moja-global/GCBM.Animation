@@ -14,7 +14,7 @@ from animator.animator import Animator
 # Test a plain old LayerCollection - bounding box is the first layer found.
 layers = LayerCollection(palette="Reds")
 bbox = None
-for layer_path in glob(r"C:\Projects\Standalone_Template\processed_output\spatial\Bio_To_DOM_From_Disturbances*.tiff"):
+for layer_path in glob(r"C:\Projects\Standalone_Template\processed_output\spatial\NPP*.tiff"):
     year = os.path.splitext(layer_path)[0][-4:]
     layer = Layer(layer_path, year)
     layers.append(layer)
@@ -37,7 +37,7 @@ for rendered_layer in disturbance_frames:
 
 # Test an Indioator.
 results_db = SqliteGcbmResultsDatabase(r"C:\Projects\Standalone_Template\processed_output\compiled_gcbm_output.db")
-indicator = Indicator(results_db, "NPP", r"C:\Projects\Standalone_Template\processed_output\spatial\NPP*.tiff", units=Units.Ktc, palette="Greens")
+indicator = Indicator(results_db, "NPP", r"C:\Projects\Standalone_Template\processed_output\spatial\NPP*.tiff", graph_units=Units.Ktc, palette="Greens")
 
 # Render using the bounding box from earlier and save the output for viewing.
 for frame in indicator.render_map_frames(bounding_box=bbox)[0]:

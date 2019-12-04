@@ -22,7 +22,7 @@ class Animator:
         for indicator in self._indicators:
             graph_frames = indicator.render_graph_frames()
             indicator_frames, indicator_legend = indicator.render_map_frames(bounding_box)
-            indicator_legend_title = f"{indicator.title} ({indicator.units.value[1]})"
+            indicator_legend_title = f"{indicator.title} ({indicator.map_units.value[1]})"
             legend_frame = Legend({
                 indicator_legend_title: indicator_legend,
                 "Disturbances": disturbance_legend

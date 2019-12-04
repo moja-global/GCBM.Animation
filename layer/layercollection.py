@@ -94,16 +94,18 @@ class LayerCollection:
 
             for i in range(bins):
                 if i == 0:
-                    legend[min_value] = {
-                        "label": f"<= {min_value}",
+                    value = min_value + bin_size
+                    legend[value] = {
+                        "label": f"<= {value}",
                         "color": next(rgb_colors)}
                 elif i + 1 == bins:
-                    legend[max_value] = {
-                        "label": f"> {max_value}",
+                    value = max_value - bin_size
+                    legend[value] = {
+                        "label": f"> {value}",
                         "color": next(rgb_colors)}
                 else:
-                    range_min = (i - 1) * bin_size
-                    range_max = i * bin_size
+                    range_min = min_value + i * bin_size
+                    range_max = min_value + (i + 1) * bin_size
                     legend[(range_min, range_max)] = {
                         "label": f"{range_min} to {range_max}",
                         "color": next(rgb_colors)}

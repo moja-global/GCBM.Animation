@@ -25,21 +25,27 @@ class Units(Enum):
 class Indicator:
 
     def __init__(self, results_database, database_indicator, layer_pattern,
-                 title=None, units=Units.Tc, palette="Greens"):
+                 title=None, graph_units=Units.Tc, map_units=Units.TcPerHa,
+                 palette="Greens"):
         self._results_database = results_database
         self._database_indicator = database_indicator
         self._layer_pattern = layer_pattern
         self._title = title or database_indicator
-        self._units = units
-        self._palette = palette
+        self._graph_units = graph_units or Units.Tc
+        self._map_units = map_units or Units.TcPerHa
+        self._palette = palette or "Greens"
 
     @property
     def title(self):
         return self._title
 
     @property
-    def units(self):
-        return self._units
+    def map_units(self):
+        return self._map_units
+    
+    @property
+    def graph_units(self):
+        return self._graph_units
     
     def render_map_frames(self, bounding_box=None):
         start_year, end_year = self._results_database.simulation_years
@@ -48,7 +54,7 @@ class Indicator:
         return layers.render(bounding_box, start_year, end_year)
 
     def render_graph_frames(self):
-        units, units_label = self._units.value
+        units, units_label = self._graph_units.value
         indicator_data = self._results_database.get_annual_result(self._database_indicator, units)
 
         years = list(indicator_data.keys())
