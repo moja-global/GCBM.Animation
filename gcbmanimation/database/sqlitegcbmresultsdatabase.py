@@ -1,7 +1,7 @@
 import os
 import sqlite3
 from collections import OrderedDict
-from database.gcbmresultsdatabase import GcbmResultsDatabase
+from gcbmanimation.database.gcbmresultsdatabase import GcbmResultsDatabase
 
 class SqliteGcbmResultsDatabase(GcbmResultsDatabase):
 

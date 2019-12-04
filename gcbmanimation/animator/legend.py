@@ -1,6 +1,6 @@
-from util.tempfile import mktmp
-from animator.frame import Frame
 from matplotlib import pyplot as plt
+from gcbmanimation.util.tempfile import mktmp
+from gcbmanimation.animator.frame import Frame
 
 class Legend:
 

@@ -1,7 +1,7 @@
 import os
 import json
-from layer.layer import Layer
-from layer.layercollection import LayerCollection
+from gcbmanimation.layer.layer import Layer
+from gcbmanimation.layer.layercollection import LayerCollection
 
 class DisturbanceLayerConfigurer:
     '''

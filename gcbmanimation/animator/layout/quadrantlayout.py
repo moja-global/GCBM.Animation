@@ -1,8 +1,8 @@
 from PIL import Image
 from PIL import ImageFont
 from PIL import ImageDraw
-from animator.frame import Frame
-from util.tempfile import mktmp
+from gcbmanimation.animator.frame import Frame
+from gcbmanimation.util.tempfile import mktmp
 
 class Quadrant:
 

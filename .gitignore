@@ -1,2 +1,5 @@
 .suo
 __pycache__
+build
+dist
+gcbmanimation.egg-info

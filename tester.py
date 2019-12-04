@@ -1,15 +1,15 @@
 import os
 import shutil
 from glob import glob
-from layer.layercollection import LayerCollection
-from layer.layer import Layer
-from layer.boundingbox import BoundingBox
-from util.disturbancelayerconfigurer import DisturbanceLayerConfigurer
-from database.sqlitegcbmresultsdatabase import SqliteGcbmResultsDatabase
-from animator.indicator import Indicator
-from animator.indicator import Units
-from animator.legend import Legend
-from animator.animator import Animator
+from gcbmanimation.layer.layercollection import LayerCollection
+from gcbmanimation.layer.layer import Layer
+from gcbmanimation.layer.boundingbox import BoundingBox
+from gcbmanimation.util.disturbancelayerconfigurer import DisturbanceLayerConfigurer
+from gcbmanimation.database.sqlitegcbmresultsdatabase import SqliteGcbmResultsDatabase
+from gcbmanimation.animator.indicator import Indicator
+from gcbmanimation.animator.indicator import Units
+from gcbmanimation.animator.legend import Legend
+from gcbmanimation.animator.animator import Animator
 
 # Test a plain old LayerCollection - bounding box is the first layer found.
 layers = LayerCollection(palette="Reds")

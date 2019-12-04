@@ -4,12 +4,12 @@ import sqlite3
 import json
 from glob import glob
 from argparse import ArgumentParser
-from util.disturbancelayerconfigurer import DisturbanceLayerConfigurer
-from database.sqlitegcbmresultsdatabase import SqliteGcbmResultsDatabase
-from animator.indicator import Indicator
-from animator.indicator import Units
-from animator.animator import Animator
-from layer.boundingbox import BoundingBox
+from gcbmanimation.util.disturbancelayerconfigurer import DisturbanceLayerConfigurer
+from gcbmanimation.database.sqlitegcbmresultsdatabase import SqliteGcbmResultsDatabase
+from gcbmanimation.animator.indicator import Indicator
+from gcbmanimation.animator.indicator import Units
+from gcbmanimation.animator.animator import Animator
+from gcbmanimation.layer.boundingbox import BoundingBox
 
 def find_units(units_str):
     try:

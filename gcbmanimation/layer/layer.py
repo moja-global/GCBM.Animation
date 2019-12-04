@@ -4,8 +4,8 @@ import logging
 import os
 import subprocess
 import numpy as np
-from util.tempfile import mktmp
-from animator.frame import Frame
+from gcbmanimation.util.tempfile import mktmp
+from gcbmanimation.animator.frame import Frame
 
 class Layer:
     '''

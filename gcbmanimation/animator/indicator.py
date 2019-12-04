@@ -7,10 +7,10 @@ from contextlib import contextmanager
 from matplotlib import image as mpimg
 from matplotlib import pyplot as plt
 from matplotlib import gridspec
-from layer.layer import Layer
-from layer.layercollection import LayerCollection
-from util.tempfile import mktmp
-from animator.frame import Frame
+from gcbmanimation.layer.layer import Layer
+from gcbmanimation.layer.layercollection import LayerCollection
+from gcbmanimation.util.tempfile import mktmp
+from gcbmanimation.animator.frame import Frame
 
 class Units(Enum):
     

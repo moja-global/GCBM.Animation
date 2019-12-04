@@ -2,8 +2,8 @@ import os
 import gdal
 import numpy as np
 from osgeo.scripts import gdal_calc
-from layer.layer import Layer
-from util.tempfile import mktmp
+from gcbmanimation.layer.layer import Layer
+from gcbmanimation.util.tempfile import mktmp
 
 class BoundingBox(Layer):
 

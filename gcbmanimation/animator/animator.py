@@ -1,7 +1,7 @@
 import os
 import imageio
-from animator.layout.quadrantlayout import QuadrantLayout
-from animator.legend import Legend
+from gcbmanimation.animator.layout.quadrantlayout import QuadrantLayout
+from gcbmanimation.animator.legend import Legend
 
 class Animator:
     '''

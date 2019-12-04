@@ -3,9 +3,9 @@ import gdal
 import seaborn as sns
 from itertools import chain
 from collections import defaultdict
-from layer.layer import Layer
-from animator.frame import Frame
-from util.tempfile import mktmp
+from gcbmanimation.layer.layer import Layer
+from gcbmanimation.animator.frame import Frame
+from gcbmanimation.util.tempfile import mktmp
 
 class LayerCollection:
     '''
@@ -22,6 +22,9 @@ class LayerCollection:
 
     def append(self, layer):
         self._layers.append(layer)
+
+    def merge(self, other):
+        self._layers.extend(other._layers)
 
     def render(self, bounding_box=None, start_year=None, end_year=None):
         layer_years = {layer.year for layer in self._layers}
@@ -48,7 +51,7 @@ class LayerCollection:
         background_frame = background_layer.flatten().render(
             {1: {"color": (128, 128, 128)}}, bounding_box, transparent=False)
 
-        working_layers = [self._merge(layers) for layers in layers_by_year.values()]
+        working_layers = [self._merge_layers(layers) for layers in layers_by_year.values()]
         legend = self._create_legend(working_layers, common_interpretation)
         rendered_layers = [
             layer.render(legend, bounding_box).composite(background_frame, send_to_bottom=True)
@@ -59,7 +62,7 @@ class LayerCollection:
         
         return rendered_layers, legend
 
-    def _merge(self, layers):
+    def _merge_layers(self, layers):
         output_path = mktmp(suffix=".tif")
         gdal.Warp(output_path,
                   [layer.path for layer in layers],

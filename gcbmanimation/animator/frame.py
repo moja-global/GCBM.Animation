@@ -1,5 +1,5 @@
 from PIL import Image
-from util.tempfile import mktmp
+from gcbmanimation.util.tempfile import mktmp
 
 class Frame:
 
