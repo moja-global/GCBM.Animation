@@ -2,6 +2,7 @@ import os
 import imageio
 from gcbmanimation.animator.layout.quadrantlayout import QuadrantLayout
 from gcbmanimation.animator.legend import Legend
+from gcbmanimation.util.tempfile import cleanup
 
 class Animator:
     '''
@@ -71,6 +72,7 @@ class Animator:
             video_frames.append(video_frames[-1]) # Duplicate the last frame to display longer.
 
             imageio.mimsave(os.path.join(self._output_path, f"{indicator.title}.wmv"), video_frames, fps=1)
+            cleanup("*.tif")
 
     def _find_frame(self, frame_collection, year, default=None):
         return next(filter(lambda frame: frame.year == year, frame_collection), None)

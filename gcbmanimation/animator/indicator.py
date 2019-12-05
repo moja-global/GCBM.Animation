@@ -35,7 +35,7 @@ class Indicator:
     'database_indiator' -- the name of an indicator to retrieve from the results
         database.
     'layer_pattern' -- a file pattern (including directory path) in glob format to
-        find the spatial outputs for the indicator, i.e. "c:\my_run\NPP_*.tif".
+        find the spatial outputs for the indicator, i.e. "c:\\my_run\\NPP_*.tif".
     'title' -- the indicator title for presentation - uses the database_indicator
         name if not provided.
     'graph_units' -- a Units enum value for the graph units - result values will

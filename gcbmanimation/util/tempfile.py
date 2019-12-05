@@ -1,7 +1,16 @@
+import os
 from tempfile import NamedTemporaryFile
 from tempfile import TemporaryDirectory
+from glob import glob
 
-temp_dir = TemporaryDirectory()
+__temp_dir = TemporaryDirectory()
+
+def cleanup(pattern=None):
+    if pattern:
+        for fn in glob(os.path.join(__temp_dir.name, pattern)):
+            os.remove(fn)
+    else:
+        __temp_dir = TemporaryDirectory()
 
 def mktmp(**kwargs):
     '''
@@ -9,4 +18,4 @@ def mktmp(**kwargs):
     Accepts any arguments supported by NamedTemporaryFile. Temporary files will be
     deleted when the interpreter exits.
     '''
-    return NamedTemporaryFile("w", dir=temp_dir.name, delete=False, **kwargs).name
+    return NamedTemporaryFile("w", dir=__temp_dir.name, delete=False, **kwargs).name
