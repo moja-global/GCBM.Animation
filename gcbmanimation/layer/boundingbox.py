@@ -6,6 +6,13 @@ from gcbmanimation.layer.layer import Layer
 from gcbmanimation.util.tempfile import mktmp
 
 class BoundingBox(Layer):
+    '''
+    A type of Layer that can crop other Layer objects to its minimum spatial extent
+    and nodata pixels.
+
+    Arguments:
+    'path' -- path to a raster file to use as a bounding box.
+    '''
 
     def __init__(self, path):
         super().__init__(path, 0)
@@ -15,6 +22,10 @@ class BoundingBox(Layer):
     
     @property
     def min_pixel_bounds(self):
+        '''
+        The minimum pixel bounds of the bounding box: the minimum box surrounding
+        the non-nodata pixels in the layer.
+        '''
         if not self._min_pixel_bounds:
             raster_data = gdal.Open(self._path).ReadAsArray()
             x_min = raster_data.shape[1]
@@ -39,6 +50,10 @@ class BoundingBox(Layer):
 
     @property
     def min_geographic_bounds(self):
+        '''
+        The minimum spatial extent of the bounding box: the minimum box surrounding
+        the non-nodata pixels in the layer.
+        '''
         if not self._min_geographic_bounds:
             x_min, x_max, y_min, y_max = self.min_pixel_bounds
             origin_x, x_size, _, origin_y, _, y_size, *_ = gdal.Open(self._path).GetGeoTransform()
@@ -53,6 +68,15 @@ class BoundingBox(Layer):
         return self._min_geographic_bounds
 
     def crop(self, layer):
+        '''
+        Crops a Layer to the minimum spatial extent and nodata pixels of this
+        bounding box.
+
+        Arguments:
+        'layer' -- the layer to crop.
+
+        Returns a new cropped Layer object.
+        '''
         if not self._initialized:
             bbox_path = mktmp(suffix=".tif")
             gdal.Translate(bbox_path, gdal.Open(self._path), projWin=self.min_geographic_bounds)

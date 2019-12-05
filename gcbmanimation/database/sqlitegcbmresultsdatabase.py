@@ -4,6 +4,12 @@ from collections import OrderedDict
 from gcbmanimation.database.gcbmresultsdatabase import GcbmResultsDatabase
 
 class SqliteGcbmResultsDatabase(GcbmResultsDatabase):
+    '''
+    Retrieves non-spatial annual results from a SQLite GCBM results database.
+
+    Arguments:
+    'path' -- path to SQLite GCBM results database.
+    '''
 
     results_tables = {
         "v_flux_indicator_aggregates": "flux_tc",
@@ -20,12 +26,14 @@ class SqliteGcbmResultsDatabase(GcbmResultsDatabase):
 
     @property
     def simulation_years(self):
+        '''See GcbmResultsDatabase.simulation_years.'''
         conn = sqlite3.connect(self._path)
         years = conn.execute("SELECT MIN(year), MAX(year) from v_age_indicators").fetchone()
 
         return years
 
     def get_annual_result(self, indicator, units=1):
+        '''See GcbmResultsDatabase.get_annual_result.'''
         conn = sqlite3.connect(self._path)
         table, value_col = self._find_indicator_table(indicator)
         db_result = conn.execute(

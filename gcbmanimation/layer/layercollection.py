@@ -9,7 +9,21 @@ from gcbmanimation.util.tempfile import mktmp
 
 class LayerCollection:
     '''
-    A collection of :class:`Layer`s that belong together in an animation.
+    A collection of Layer objects that belong together in an animation. The layers
+    in the collection should be generally related, i.e. a collection of interpreted
+    layers along the same theme (disturbances), or a collection of value layers for
+    the same indicator (NPP, ...).
+
+    Layers in the collection can be for different years - when the collection is
+    rendered, the layers will be merged together by year, and each year will
+    become a separate Frame object.
+
+    Arguments:
+    'layers' -- a list of Layer objects to include in the collection.
+    'palette' -- the color palette to use for the rendered frames - can be the
+        name of any seaborn palette (deep, muted, bright, pastel, dark, colorblind,
+        hls, husl) or matplotlib colormap. To find matplotlib colormaps:
+        from matplotlib import cm; dir(cm)
     '''
 
     def __init__(self, layers=None, palette="hls"):
@@ -18,15 +32,35 @@ class LayerCollection:
 
     @property
     def empty(self):
+        '''Checks if this collection is empty.'''
         return not self._layers
 
     def append(self, layer):
+        '''Appends a layer to the collection.'''
         self._layers.append(layer)
 
     def merge(self, other):
+        '''Merges another LayerCollection's layers into this one.'''
         self._layers.extend(other._layers)
 
     def render(self, bounding_box=None, start_year=None, end_year=None):
+        '''
+        Renders the collection of layers into colorized Frame objects organized
+        by year.
+
+        Arguments:
+        'bounding_box' -- optional bounding box Layer; rendered layers in this
+            collection will be cropped to the bounding box's minimum spatial extent
+            and nodata pixels. The bounding box also has its data values flattened
+            to grey and becomes the background layer.
+        'start_year' -- optional start year to render from - must be specified
+            along with end_year.
+        'end_year' -- optional end year to render to - must be specified along
+            with start_year.
+        
+        Returns a list of rendered Frame objects and a legend (dict) describing
+        the colors.
+        '''
         layer_years = {layer.year for layer in self._layers}
         render_years = set(range(start_year, end_year + 1)) if start_year and end_year else layer_years
         working_layers = [layer for layer in self._layers if layer.year in render_years]
@@ -44,8 +78,7 @@ class LayerCollection:
         # i.e. fire and harvest in separate files.
         layers_by_year = defaultdict(list)
         for layer in working_layers:
-            if layer.year in render_years:
-                layers_by_year[layer.year].append(layer)
+            layers_by_year[layer.year].append(layer)
 
         background_layer = bounding_box or working_layers[0]
         background_frame = background_layer.flatten().render(

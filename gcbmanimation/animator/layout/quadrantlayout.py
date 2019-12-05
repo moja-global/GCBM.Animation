@@ -6,6 +6,10 @@ from gcbmanimation.util.tempfile import mktmp
 Image.MAX_IMAGE_PIXELS = None
 
 class Quadrant:
+    '''
+    Represents a quadrant of a QuadrantLayout: its x/y origin (top left corner),
+    width, height, and display title.
+    '''
 
     def __init__(self, x_origin, y_origin, width, height, title=None):
         self.x_origin = x_origin
@@ -16,6 +20,15 @@ class Quadrant:
 
 
 class QuadrantLayout:
+    '''
+    Combines frames into a 4-box layout.
+
+    Arguments:
+    'qN_pct' -- tuple giving the percent width and height of the combined image
+        reserved for quadrant N.
+    'margin' -- proportion of space in the combined image to reserve for the
+        outer margin.
+    '''
 
     def __init__(self, q1_pct, q2_pct, q3_pct, q4_pct, margin=0.05):
         self._q1_pct = q1_pct
@@ -29,6 +42,17 @@ class QuadrantLayout:
         q1_label=None, q2_label=None, q3_label=None, q4_label=None,
         title=None, dimensions=None
     ):
+        '''
+        Renders four Frame objects into a single Frame with a quadrant layout.
+
+        Arguments:
+        'qN_frame' -- Frame object to render in quadrant N.
+        'qN_label' -- optional title for quadrant N.
+        'title' -- optional title for the combined image.
+        'dimensions' -- pixel dimensions for the combined image.
+
+        Returns the combined image as a new Frame for the same year as q1_frame.
+        '''
         width, height = dimensions or (640, 480)
         canvas_width = int(width * (1 - self._margin))
         canvas_height = int(height * (1 - self._margin))

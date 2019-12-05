@@ -9,11 +9,24 @@ class DisturbanceLayerConfigurer:
     *_moja.tif files along with their tiled metadata (disturbance type and year),
     splitting them into multiple instances if more than one year is present in a
     file.
+
+    Arguments:
+    'palette' -- the color palette to use for the layer collection - can be the
+        name of any seaborn palette (deep, muted, bright, pastel, dark, colorblind,
+        hls, husl) or matplotlib colormap. To find matplotlib colormaps:
+        from matplotlib import cm; dir(cm)
     '''
     def __init__(self, palette="hls"):
         self._palette = palette
 
     def configure(self, study_area_path):
+        '''
+        Scans the specified study area JSON file for disturbance layer and returns
+        a LayerCollection.
+
+        Arguments:
+        'study_area_path' -- the path to the study area file to scan.
+        '''
         if not os.path.exists(study_area_path):
             raise IOError(f"{study_area_path} not found.")
 

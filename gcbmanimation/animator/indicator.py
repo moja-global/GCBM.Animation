@@ -24,6 +24,31 @@ class Units(Enum):
     MtcPerHa = 1e6, "MtC/ha/yr"
 
 class Indicator:
+    '''
+    Defines an ecosystem indicator from the GCBM results to render into colorized
+    Frame objects. An indicator is a collection of spatial outputs and a related
+    indicator from the GCBM results database.
+
+    Arguments:
+    'results_database' -- a GcbmResultsDatabase for retrieving the non-spatial
+        GCBM results.
+    'database_indiator' -- the name of an indicator to retrieve from the results
+        database.
+    'layer_pattern' -- a file pattern (including directory path) in glob format to
+        find the spatial outputs for the indicator, i.e. "c:\my_run\NPP_*.tif".
+    'title' -- the indicator title for presentation - uses the database_indicator
+        name if not provided.
+    'graph_units' -- a Units enum value for the graph units - result values will
+        be divided by this amount.
+    'map_units' -- a Units enum value for the map units - spatial output values
+        will not be modified, but it is important for this to match the spatial
+        output units for the correct unit labels to be displayed in the rendered
+        Frames.
+    'palette' -- the color palette to use for the rendered map frames - can be the
+        name of any seaborn palette (deep, muted, bright, pastel, dark, colorblind,
+        hls, husl) or matplotlib colormap. To find matplotlib colormaps:
+        from matplotlib import cm; dir(cm)
+    '''
 
     def __init__(self, results_database, database_indicator, layer_pattern,
                  title=None, graph_units=Units.Tc, map_units=Units.TcPerHa,
@@ -38,23 +63,40 @@ class Indicator:
 
     @property
     def title(self):
+        '''Gets the indicator title.'''
         return self._title
 
     @property
     def map_units(self):
+        '''Gets the Units for the spatial output.'''
         return self._map_units
     
     @property
     def graph_units(self):
+        '''Gets the Units for the graphed/non-spatial output.'''
         return self._graph_units
     
     def render_map_frames(self, bounding_box=None):
+        '''
+        Renders the indicator's spatial output into colorized Frame objects.
+
+        Arguments:
+        'bounding_box' -- optional bounding box Layer; spatial output will be
+            cropped to the bounding box's minimum spatial extent and nodata pixels.
+
+        Returns a list of colorized Frames, one for each year of output, and a
+        legend in dictionary format describing the colors.
+        '''
         start_year, end_year = self._results_database.simulation_years
         layers = self._find_layers()
         
         return layers.render(bounding_box, start_year, end_year)
 
     def render_graph_frames(self):
+        '''
+        Renders the indidator's non-spatial output into Frame objects. Returns a
+        list of Frames, one for each year of output.
+        '''
         units, units_label = self._graph_units.value
         indicator_data = self._results_database.get_annual_result(self._database_indicator, units)
 

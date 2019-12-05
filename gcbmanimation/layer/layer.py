@@ -14,13 +14,11 @@ class Layer:
     single attribute value. If an interpretation is provided, any pixels not
     included are considered nodata.
 
-    :param path: path to the layer
-    :type path: str
-    :param year: the year the layer applies to
-    :type year: int
-    :param interpretation: optional attribute table for the raster; should be a
+    Arguments:
+    'path' -- path to the layer file
+    'year' -- the year the layer applies to
+    'interpretation' -- optional attribute table for the raster; should be a
         dictionary of pixel value to interpretation, i.e. {1: "Wildfire"}
-    :type interpretation: dict
     '''
 
     def __init__(self, path, year, interpretation=None):
@@ -31,22 +29,30 @@ class Layer:
 
     @property
     def interpretation(self):
+        '''Gets the layer interpretation: dict of pixel value to string.'''
         return self._interpretation
 
     @property
     def has_interpretation(self):
+        '''
+        Checks if the layer has an interpretation (pixel values have meaning
+        other than their literal numeric value).
+        '''
         return self._interpretation is not None
 
     @property
     def path(self):
+        '''Gets the layer's file path.'''
         return self._path
 
     @property
     def year(self):
+        '''Gets the year the layer applies to.'''
         return self._year
 
     @property
     def info(self):
+        '''Gets this layer's GDAL info dictionary, including min/max values.'''
         if not self._info:
             self._info = json.loads(gdal.Info(
                 self._path, format="json", deserialize=False, computeMinMax=True).replace("nan", "0"))
@@ -55,6 +61,7 @@ class Layer:
 
     @property
     def min_max(self):
+        '''Gets this layer's minimum and maximum pixel values.'''
         info = self.info
         if not info or "computedMin" not in info["bands"][0]:
             return (0, 0)
@@ -63,10 +70,12 @@ class Layer:
 
     @property
     def data_type(self):
+        '''Gets this layer's data type.'''
         return self.info["bands"][0]["type"]
 
     @property
     def nodata_value(self):
+        '''Gets this layer's nodata value in its correct Python type.'''
         value = self.info["bands"][0]["noDataValue"]
         dt = str(self.data_type).lower()
         if dt == "float32" or dt == "float" or dt == str(gdal.GDT_Float32):
@@ -75,12 +84,26 @@ class Layer:
             return int(value)
 
     def get_histogram(self, min_value, max_value, buckets):
+        '''Computes a histogram for this layer.'''
         raster = gdal.Open(self._path)
         band = raster.GetRasterBand(1)
         
         return band.GetHistogram(min=min_value, max=max_value, buckets=buckets)
 
     def reclassify(self, new_interpretation, nodata_value=0):
+        '''
+        Reclassifies a copy of this layer's pixel values according to a new interpretation.
+        Any old interpretations not assigned a new pixel value will be set to nodata;
+        for example, if the layer's original interpretation is {1: "Fire", 2: "Clearcut"},
+        and the new interpretation is {3: "Fire"}, the original value 1 pixels will
+        become 3, and the original value 2 pixels will become nodata.
+
+        Arguments:
+        'new_interpretation' -- dictionary of pixel value to interpreted value.
+        'nodata_value' -- the new nodata pixel value.
+        
+        Returns a new reclassified Layer object.
+        '''
         logging.info(f"Reclassifying {self._path}")
         raster = gdal.Open(self._path)
         band = raster.GetRasterBand(1)
@@ -107,6 +130,10 @@ class Layer:
         return reclassified_layer
 
     def flatten(self):
+        '''
+        Flattens a copy of this layer: all non-nodata pixels become 1.
+        Returns a new flattened Layer object.
+        '''
         logging.info(f"Flattening {self._path}")
         raster = gdal.Open(self._path)
         band = raster.GetRasterBand(1)
@@ -119,6 +146,19 @@ class Layer:
         return flattened_layer
 
     def render(self, legend, bounding_box=None, transparent=True):
+        '''
+        Renders this layer into a colorized Frame according to the specified legend.
+
+        Arguments:
+        'legend' -- dictionary of pixel value (or tuple of min/max value range) to
+            dictionary containing the color tuple (R, G, B) and label for the entry.
+        'bounding_box' -- optional bounding box Layer; this layer will be cropped
+            to the bounding box's minimum spatial extent and nodata pixels.
+        'transparent' -- whether or not nodata and 0-value pixels should be
+            transparent in the rendered Frame.
+        
+        Returns this layer as a colorized Frame object.
+        '''
         with open(mktmp(suffix=".txt"), "w") as color_table:
             color_table_path = color_table.name
             color_table.write(f"nv 255,255,255,{0 if transparent else 255}\n")

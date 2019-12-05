@@ -3,11 +3,22 @@ from gcbmanimation.util.tempfile import mktmp
 from gcbmanimation.animator.frame import Frame
 
 class Legend:
+    '''
+    Renders a Frame containing a graphical legend from one or more dictionary-
+    format color legends generated internally by LayerCollection.
+
+    Arguments:
+    'legends' -- the dictionary-format legends to render.
+    '''
 
     def __init__(self, legends):
         self._legends = legends
 
     def render(self):
+        '''
+        Returns a Frame containing a graphical legend generated from the contained
+        dictionary-format legends.
+        '''
         frames = []
         for legend_title, legend in self._legends.items():
             fig = plt.figure()
