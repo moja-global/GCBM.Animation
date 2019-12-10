@@ -21,8 +21,8 @@ class DisturbanceLayerConfigurer:
 
     def configure(self, study_area_path):
         '''
-        Scans the specified study area JSON file for disturbance layer and returns
-        a LayerCollection.
+        Scans the specified study area JSON file for disturbance layers and returns
+        a LayerCollection containing them.
 
         Arguments:
         'study_area_path' -- the path to the study area file to scan.

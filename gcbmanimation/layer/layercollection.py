@@ -72,7 +72,7 @@ class LayerCollection:
         if interpreted:
             # Interpreted layers where the pixel values have meaning, i.e. a disturbance type,
             # get their pixel values normalized across the whole collection.
-            unique_values = set(chain(*(layer.interpretation.values() for layer in working_layers)))
+            unique_values = sorted(set(chain(*(layer.interpretation.values() for layer in working_layers))))
             common_interpretation = {i: value for i, value in enumerate(unique_values, 1)}
             working_layers = [layer.reclassify(common_interpretation) for layer in working_layers]
 
