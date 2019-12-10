@@ -4,7 +4,7 @@ import logging
 import os
 import subprocess
 import numpy as np
-from gcbmanimation.util.tempfile import mktmp
+from gcbmanimation.util.tempfile import TempFileManager
 from gcbmanimation.animator.frame import Frame
 
 class Layer:
@@ -123,7 +123,7 @@ class Layer:
 
             raster_data[raster_data == original_pixel_value] = new_pixel_value
 
-        output_path = mktmp(suffix=".tif")
+        output_path = TempFileManager.mktmp(suffix=".tif")
         self._save_as(raster_data, nodata_value, output_path)
         reclassified_layer = Layer(output_path, self._year, new_interpretation)
 
@@ -139,7 +139,7 @@ class Layer:
         band = raster.GetRasterBand(1)
         raster_data = band.ReadAsArray()
         raster_data[raster_data != self.nodata_value] = 1
-        output_path = mktmp(suffix=".tif")
+        output_path = TempFileManager.mktmp(suffix=".tif")
         self._save_as(raster_data, self.nodata_value, output_path)
         flattened_layer = Layer(output_path, self.year)
 
@@ -159,7 +159,7 @@ class Layer:
         
         Returns this layer as a colorized Frame object.
         '''
-        with open(mktmp(suffix=".txt"), "w") as color_table:
+        with open(TempFileManager.mktmp(suffix=".txt"), "w") as color_table:
             color_table_path = color_table.name
             color_table.write(f"nv 255,255,255,{0 if transparent else 255}\n")
             color_table.write(f"0 255,255,255,{0 if transparent else 255}\n")
@@ -194,7 +194,7 @@ class Layer:
             color_table.write(f"{-1e-3} {near_zero_color},255\n{1e-3} {near_zero_color},255\n")
 
         working_layer = self if not bounding_box else bounding_box.crop(self)
-        rendered_layer_path = mktmp(suffix=".png")
+        rendered_layer_path = TempFileManager.mktmp(suffix=".png")
         subprocess.run([
             "gdaldem",
             "color-relief",

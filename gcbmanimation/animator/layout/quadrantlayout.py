@@ -2,7 +2,7 @@ from PIL import Image
 from PIL import ImageFont
 from PIL import ImageDraw
 from gcbmanimation.animator.frame import Frame
-from gcbmanimation.util.tempfile import mktmp
+from gcbmanimation.util.tempfile import TempFileManager
 Image.MAX_IMAGE_PIXELS = None
 
 class Quadrant:
@@ -101,7 +101,7 @@ class QuadrantLayout:
         for i, frame in enumerate((q1_frame, q2_frame, q3_frame, q4_frame)):
             self._render_quadrant(image, quadrants[i], frame)
 
-        out_path = mktmp(suffix=".png")
+        out_path = TempFileManager.mktmp(suffix=".png")
         image.save(out_path)
 
         return Frame(q1_frame.year, out_path)

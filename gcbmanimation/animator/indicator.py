@@ -9,7 +9,7 @@ from matplotlib import pyplot as plt
 from matplotlib import gridspec
 from gcbmanimation.layer.layer import Layer
 from gcbmanimation.layer.layercollection import LayerCollection
-from gcbmanimation.util.tempfile import mktmp
+from gcbmanimation.util.tempfile import TempFileManager
 from gcbmanimation.animator.frame import Frame
 Image.MAX_IMAGE_PIXELS = None
 
@@ -134,7 +134,7 @@ class Indicator:
                 shaded_values[shaded_years > year] = np.nan
                 plt.fill_between(shaded_years, shaded_values, facecolor="gainsboro")
 
-                out_file = mktmp(suffix=".png")
+                out_file = TempFileManager.mktmp(suffix=".png")
                 fig.savefig(out_file, bbox_inches="tight", dpi=300)
                 frames.append(Frame(year, out_file))
 
@@ -150,7 +150,7 @@ class Indicator:
             plt.clf()
        
     def _find_layers(self):
-        layers = LayerCollection(palette=self._palette)
+        layers = LayerCollection(palette=self._palette, background_color=(255, 255, 255))
         for layer_path in glob(self._layer_pattern):
             year = os.path.splitext(layer_path)[0][-4:]
             layer = Layer(layer_path, year)

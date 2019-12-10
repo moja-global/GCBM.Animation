@@ -1,5 +1,5 @@
 from PIL import Image
-from gcbmanimation.util.tempfile import mktmp
+from gcbmanimation.util.tempfile import TempFileManager
 Image.MAX_IMAGE_PIXELS = None
 
 class Frame:
@@ -37,7 +37,7 @@ class Frame:
 
         Returns the merged image as a new Frame with the same year as this one.
         '''
-        out_path = mktmp(suffix=".png")
+        out_path = TempFileManager.mktmp(suffix=".png")
         this_image = Image.open(self._path)
         other_image = Image.open(frame.path)
 
@@ -70,7 +70,7 @@ class Frame:
             merged_image.paste(image, (x_offset, 0))
             x_offset += image.size[0]
 
-        out_path = mktmp(suffix=".png")
+        out_path = TempFileManager.mktmp(suffix=".png")
         merged_image.save(out_path)
 
         return Frame(self._year, out_path)

@@ -5,7 +5,7 @@ from itertools import chain
 from collections import defaultdict
 from gcbmanimation.layer.layer import Layer
 from gcbmanimation.animator.frame import Frame
-from gcbmanimation.util.tempfile import mktmp
+from gcbmanimation.util.tempfile import TempFileManager
 
 class LayerCollection:
     '''
@@ -24,11 +24,13 @@ class LayerCollection:
         name of any seaborn palette (deep, muted, bright, pastel, dark, colorblind,
         hls, husl) or matplotlib colormap. To find matplotlib colormaps:
         from matplotlib import cm; dir(cm)
+    'background_color' -- RGB tuple for the background color.
     '''
 
-    def __init__(self, layers=None, palette="hls"):
+    def __init__(self, layers=None, palette="hls", background_color=(224, 224, 224)):
         self._layers = layers or []
         self._palette = palette
+        self._background_color = background_color
 
     @property
     def empty(self):
@@ -82,7 +84,7 @@ class LayerCollection:
 
         background_layer = bounding_box or working_layers[0]
         background_frame = background_layer.flatten().render(
-            {1: {"color": (128, 128, 128)}}, bounding_box, transparent=False)
+            {1: {"color": self._background_color}}, bounding_box, transparent=False)
 
         working_layers = [self._merge_layers(layers) for layers in layers_by_year.values()]
         legend = self._create_legend(working_layers, common_interpretation)
@@ -96,7 +98,7 @@ class LayerCollection:
         return rendered_layers, legend
 
     def _merge_layers(self, layers):
-        output_path = mktmp(suffix=".tif")
+        output_path = TempFileManager.mktmp(suffix=".tif")
         gdal.Warp(output_path,
                   [layer.path for layer in layers],
                   multithread=False,
@@ -132,18 +134,21 @@ class LayerCollection:
                 if i == 0:
                     value = min_value + bin_size
                     legend[value] = {
-                        "label": f"<= {value}",
+                        "label": f"<= {self._format_value(value)}",
                         "color": next(rgb_colors)}
                 elif i + 1 == bins:
                     value = max_value - bin_size
                     legend[value] = {
-                        "label": f"> {value}",
+                        "label": f"> {self._format_value(value)}",
                         "color": next(rgb_colors)}
                 else:
                     range_min = min_value + i * bin_size
                     range_max = min_value + (i + 1) * bin_size
                     legend[(range_min, range_max)] = {
-                        "label": f"{range_min} to {range_max}",
+                        "label": f"{self._format_value(range_min)} to {self._format_value(range_max)}",
                         "color": next(rgb_colors)}
        
         return legend
+
+    def _format_value(self, value):
+        return f"{value:.2f}" if isinstance(value, float) else f"{value}"

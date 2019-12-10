@@ -1,5 +1,5 @@
 from matplotlib import pyplot as plt
-from gcbmanimation.util.tempfile import mktmp
+from gcbmanimation.util.tempfile import TempFileManager
 from gcbmanimation.animator.frame import Frame
 
 class Legend:
@@ -34,7 +34,7 @@ class Legend:
                               title=legend_title,
                               frameon=False)
 
-            out_file = mktmp(suffix=".png")
+            out_file = TempFileManager.mktmp(suffix=".png")
             fig_legend.savefig(out_file, bbox_inches="tight")
             frames.append(Frame(0, out_file))
 

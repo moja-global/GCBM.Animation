@@ -3,7 +3,7 @@ import gdal
 import numpy as np
 from osgeo.scripts import gdal_calc
 from gcbmanimation.layer.layer import Layer
-from gcbmanimation.util.tempfile import mktmp
+from gcbmanimation.util.tempfile import TempFileManager
 
 class BoundingBox(Layer):
     '''
@@ -78,20 +78,20 @@ class BoundingBox(Layer):
         Returns a new cropped Layer object.
         '''
         if not self._initialized:
-            bbox_path = mktmp(suffix=".tif")
+            bbox_path = TempFileManager.mktmp(suffix=".tif")
             gdal.Translate(bbox_path, gdal.Open(self._path), projWin=self.min_geographic_bounds)
             self._path = bbox_path
             self._initialized = True
 
         # Clip to bounding box geographical area.
-        tmp_path = mktmp(suffix=".tif")
+        tmp_path = TempFileManager.mktmp(suffix=".tif")
         gdal.Translate(tmp_path, gdal.Open(layer.path), projWin=self.min_geographic_bounds)
         
         # Clip to bounding box nodata mask.
         calc = "A * (B != {0}) + ((B == {0}) * {1})".format(
             self.nodata_value, layer.nodata_value)
 
-        output_path = mktmp(suffix=".tif")
+        output_path = TempFileManager.mktmp(suffix=".tif")
         gdal_calc.Calc(calc, output_path, layer.nodata_value, quiet=True,
                        creation_options=["BIGTIFF=YES", "COMPRESS=DEFLATE"],
                        overwrite=True, A=tmp_path, B=self.path)

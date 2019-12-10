@@ -9,8 +9,8 @@
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
-    <Name>gcbm_animation</Name>
-    <RootNamespace>gcbm_animation</RootNamespace>
+    <Name>gcbmanimation</Name>
+    <RootNamespace>gcbmanimation</RootNamespace>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -21,45 +21,46 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="animator\animator.py" />
-    <Compile Include="animator\frame.py" />
-    <Compile Include="animator\indicator.py">
+    <Compile Include="gcbmanimation\animator\animator.py" />
+    <Compile Include="gcbmanimation\animator\frame.py" />
+    <Compile Include="gcbmanimation\animator\indicator.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="animator\layout\__init__.py">
+    <Compile Include="gcbmanimation\animator\layout\__init__.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="animator\legend.py">
+    <Compile Include="gcbmanimation\animator\legend.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="animator\layout\quadrantlayout.py">
+    <Compile Include="gcbmanimation\animator\layout\quadrantlayout.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="animator\__init__.py" />
-    <Compile Include="database\gcbmresultsdatabase.py">
+    <Compile Include="gcbmanimation\animator\__init__.py" />
+    <Compile Include="gcbmanimation\database\gcbmresultsdatabase.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="database\sqlitegcbmresultsdatabase.py">
+    <Compile Include="gcbmanimation\database\sqlitegcbmresultsdatabase.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="database\__init__.py">
+    <Compile Include="gcbmanimation\database\__init__.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="gcbm_animation.py" />
-    <Compile Include="layer\boundingbox.py" />
-    <Compile Include="layer\layer.py" />
-    <Compile Include="layer\layercollection.py" />
-    <Compile Include="layer\__init__.py" />
-    <Compile Include="util\disturbancelayerconfigurer.py" />
-    <Compile Include="util\tempfile.py" />
-    <Compile Include="util\__init__.py" />
+    <Compile Include="gcbmanimation\layer\boundingbox.py" />
+    <Compile Include="gcbmanimation\layer\layer.py" />
+    <Compile Include="gcbmanimation\layer\layercollection.py" />
+    <Compile Include="gcbmanimation\layer\__init__.py" />
+    <Compile Include="gcbmanimation\util\disturbancelayerconfigurer.py" />
+    <Compile Include="gcbmanimation\util\tempfile.py" />
+    <Compile Include="gcbmanimation\util\__init__.py" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="animator\" />
-    <Folder Include="animator\layout\" />
-    <Folder Include="database\" />
-    <Folder Include="layer\" />
-    <Folder Include="util\" />
+    <Folder Include="gcbmanimation\" />
+    <Folder Include="gcbmanimation\animator\" />
+    <Folder Include="gcbmanimation\animator\layout\" />
+    <Folder Include="gcbmanimation\database\" />
+    <Folder Include="gcbmanimation\layer\" />
+    <Folder Include="gcbmanimation\util\" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in
