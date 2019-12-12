@@ -78,7 +78,7 @@ class BoundingBox(Layer):
         Returns a new cropped Layer object.
         '''
         if not self._initialized:
-            bbox_path = TempFileManager.mktmp(suffix=".tif")
+            bbox_path = TempFileManager.mktmp(no_manual_cleanup=True, suffix=".tif")
             gdal.Translate(bbox_path, gdal.Open(self._path), projWin=self.min_geographic_bounds)
             self._path = bbox_path
             self._initialized = True
