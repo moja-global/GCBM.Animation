@@ -42,6 +42,7 @@ class SqliteGcbmResultsDatabase(GcbmResultsDatabase):
             FROM (SELECT DISTINCT year FROM v_age_indicators ORDER BY year) AS years
             LEFT JOIN {table} i
                 ON years.year = i.year
+            WHERE i.indicator = '{indicator}'
             GROUP BY years.year
             ORDER BY years.year
             """).fetchall()
