@@ -14,11 +14,12 @@ class BoundingBox(Layer):
     'path' -- path to a raster file to use as a bounding box.
     '''
 
-    def __init__(self, path):
+    def __init__(self, path, projection=None):
         super().__init__(path, 0)
         self._min_pixel_bounds = None
         self._min_geographic_bounds = None
         self._initialized = False
+        self._projection = projection
     
     @property
     def min_pixel_bounds(self):
@@ -78,14 +79,16 @@ class BoundingBox(Layer):
         Returns a new cropped Layer object.
         '''
         if not self._initialized:
-            bbox_path = TempFileManager.mktmp(no_manual_cleanup=True, suffix=".tif")
-            gdal.Translate(bbox_path, gdal.Open(self._path), projWin=self.min_geographic_bounds)
-            self._path = bbox_path
-            self._initialized = True
+            self._init()
+
+        # Reproject if needed.
+        working_path = layer.path
+        if self._projection:
+            working_path = layer.reproject(self._projection).path
 
         # Clip to bounding box geographical area.
         tmp_path = TempFileManager.mktmp(suffix=".tif")
-        gdal.Translate(tmp_path, gdal.Open(layer.path), projWin=self.min_geographic_bounds)
+        gdal.Translate(tmp_path, working_path, projWin=self.min_geographic_bounds)
         
         # Clip to bounding box nodata mask.
         calc = "A * (B != {0}) + ((B == {0}) * {1})".format(
@@ -99,3 +102,12 @@ class BoundingBox(Layer):
         cropped_layer = Layer(output_path, layer.year, layer.interpretation)
 
         return cropped_layer
+
+    def _init(self):
+        if self._projection:
+            self._path = self.reproject(self._projection).path
+
+        bbox_path = TempFileManager.mktmp(no_manual_cleanup=True, suffix=".tif")
+        gdal.Translate(bbox_path, self._path, projWin=self.min_geographic_bounds)
+        self._path = bbox_path
+        self._initialized = True

@@ -12,9 +12,10 @@ class Frame:
     'path' -- the path to the image file this Frame represents.
     '''
 
-    def __init__(self, year, path):
+    def __init__(self, year, path, scale=None):
         self._year = year
         self._path = path
+        self._scale = scale
 
     @property
     def year(self):
@@ -25,6 +26,19 @@ class Frame:
     def path(self):
         '''The path to the Frame's image file.'''
         return self._path
+
+    @property
+    def scale(self):
+        '''
+        The scale (in metres per pixel) of the image, where None means
+        unknown or not applicable.
+        '''
+        return self._scale
+
+    @property
+    def size(self):
+        '''The width and height of the image.'''
+        return Image.open(self._path).size
 
     def composite(self, frame, send_to_bottom=False):
         '''
@@ -46,7 +60,7 @@ class Frame:
         else:
             Image.alpha_composite(this_image, other_image).save(out_path)
 
-        return Frame(self._year, out_path)
+        return Frame(self._year, out_path, self._scale)
 
     def merge_horizontal(self, *frames):
         '''
@@ -73,4 +87,32 @@ class Frame:
         out_path = TempFileManager.mktmp(suffix=".png")
         merged_image.save(out_path)
 
-        return Frame(self._year, out_path)
+        return Frame(self._year, out_path, scale=None)
+
+    def resize(self, width, height, margin):
+        # Resize the image as close as possible to the specified width and height
+        # while preserving the aspect ratio.
+        original_width, original_height = self.size
+        aspect_ratio = original_width / original_height
+
+        max_x = int(width * (1 - margin * 2))
+        max_y = int(height * (1 - margin * 2))
+
+        if aspect_ratio > 1:
+            new_width = int(width * (1 - margin * 2))
+            new_height = int(new_width / aspect_ratio)
+            if new_height > max_y:
+                new_height = max_y
+                new_width = int(new_height * aspect_ratio)
+        else:
+            new_height = max_y
+            new_width = int(new_height / aspect_ratio)
+            if new_width > max_x:
+                new_width = int(width * (1 - margin * 2))
+                new_height = int(new_width * aspect_ratio)
+
+        out_path = TempFileManager.mktmp(suffix=".png")
+        Image.open(self.path).resize((new_width, new_height), Image.ANTIALIAS).save(out_path)
+        new_scale = self._scale * (original_width / new_width) if self._scale else None
+
+        return Frame(self._year, out_path, new_scale)

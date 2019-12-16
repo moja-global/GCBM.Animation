@@ -52,7 +52,7 @@ class Indicator:
 
     def __init__(self, results_database, database_indicator, layer_pattern,
                  title=None, graph_units=Units.Tc, map_units=Units.TcPerHa,
-                 palette="Greens"):
+                 palette="Greens", background_color=(255, 255, 255)):
         self._results_database = results_database
         self._database_indicator = database_indicator
         self._layer_pattern = layer_pattern
@@ -60,6 +60,7 @@ class Indicator:
         self._graph_units = graph_units or Units.Tc
         self._map_units = map_units or Units.TcPerHa
         self._palette = palette or "Greens"
+        self._background_color = background_color
 
     @property
     def title(self):
@@ -150,7 +151,7 @@ class Indicator:
             plt.clf()
        
     def _find_layers(self):
-        layers = LayerCollection(palette=self._palette, background_color=(255, 255, 255))
+        layers = LayerCollection(palette=self._palette, background_color=self._background_color)
         for layer_path in glob(self._layer_pattern):
             year = os.path.splitext(layer_path)[0][-4:]
             layer = Layer(layer_path, year)

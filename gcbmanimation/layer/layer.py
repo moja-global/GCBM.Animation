@@ -4,6 +4,7 @@ import logging
 import os
 import subprocess
 import numpy as np
+from geopy.distance import distance
 from gcbmanimation.util.tempfile import TempFileManager
 from gcbmanimation.animator.frame import Frame
 
@@ -83,6 +84,18 @@ class Layer:
         else:
             return int(value)
 
+    @property
+    def scale(self):
+        '''Gets this layer's pixel size in metres.'''
+        metres = "metre" in self.info["coordinateSystem"]["wkt"]
+        if metres:
+            pixel_size_m = abs(float(self.info["geoTransform"][1]))
+        else:
+            origin_x, pixel_size, _, origin_y, *_ = self.info["geoTransform"]
+            pixel_size_m = distance((origin_y, origin_x), (origin_y, origin_x + pixel_size)).km * 1000
+
+        return pixel_size_m
+
     def get_histogram(self, min_value, max_value, buckets):
         '''Computes a histogram for this layer.'''
         raster = gdal.Open(self._path)
@@ -145,6 +158,19 @@ class Layer:
 
         return flattened_layer
 
+    def reproject(self, projection):
+        '''
+        Reprojects this layer to the specified projection.
+
+        Arguments:
+        'projection' -- the new projection, i.e. NAD83.
+        '''
+        output_path = TempFileManager.mktmp(suffix=".tif")
+        gdal.Warp(output_path, self._path, dstSRS=projection)
+        reprojected_layer = Layer(output_path, self._year, self._interpretation)
+
+        return reprojected_layer
+
     def render(self, legend, bounding_box=None, transparent=True):
         '''
         Renders this layer into a colorized Frame according to the specified legend.
@@ -205,7 +231,7 @@ class Layer:
             "-alpha",
             "-nearest_color_entry"])
 
-        return Frame(self._year, rendered_layer_path)
+        return Frame(self._year, rendered_layer_path, self.scale)
 
     def _save_as(self, data, nodata_value, output_path):
         driver = gdal.GetDriverByName("GTiff")

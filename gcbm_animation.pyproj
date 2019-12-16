@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>0a6e5677-a758-48dc-bb62-057069ac0ab3</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>gcbm_animation.py</StartupFile>
+    <StartupFile>tester.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -53,6 +53,7 @@
     <Compile Include="gcbmanimation\util\disturbancelayerconfigurer.py" />
     <Compile Include="gcbmanimation\util\tempfile.py" />
     <Compile Include="gcbmanimation\util\__init__.py" />
+    <Compile Include="tester.py" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="gcbmanimation\" />

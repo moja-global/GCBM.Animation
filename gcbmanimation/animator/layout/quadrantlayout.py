@@ -8,15 +8,16 @@ Image.MAX_IMAGE_PIXELS = None
 class Quadrant:
     '''
     Represents a quadrant of a QuadrantLayout: its x/y origin (top left corner),
-    width, height, and display title.
+    width, height, display title, and whether or not to add a scalebar.
     '''
 
-    def __init__(self, x_origin, y_origin, width, height, title=None):
+    def __init__(self, x_origin, y_origin, width, height, title=None, scalebar=False):
         self.x_origin = x_origin
         self.y_origin = y_origin
         self.width = width
         self.height = height
         self.title = title
+        self.scalebar = scalebar
 
 
 class QuadrantLayout:
@@ -86,7 +87,8 @@ class QuadrantLayout:
                      canvas_y_min,
                      int(self._q2_pct[0] / 100 * canvas_width),
                      int(self._q2_pct[1] / 100 * canvas_height),
-                     q2_label),
+                     q2_label,
+                     True),
             Quadrant(canvas_x_min,
                      int(canvas_y_max - self._q3_pct[1] / 100 * canvas_height),
                      int(self._q3_pct[0] / 100 * canvas_width),
@@ -99,7 +101,8 @@ class QuadrantLayout:
                      q4_label)]
 
         for i, frame in enumerate((q1_frame, q2_frame, q3_frame, q4_frame)):
-            self._render_quadrant(image, quadrants[i], frame)
+            if frame:
+                self._render_quadrant(image, quadrants[i], frame)
 
         out_path = TempFileManager.mktmp(suffix=".png")
         image.save(out_path)
@@ -118,34 +121,45 @@ class QuadrantLayout:
             title_y_pos = int(quadrant.y_origin + true_title_height // 2)
             ImageDraw.Draw(base_image).text((title_x_pos, title_y_pos), quadrant.title, (0, 0, 0, 255), font=font)
 
-        frame_image = Image.open(frame.path)
-        new_width, new_height = self._calculate_best_fit(frame_image, quadrant, true_title_height)
-        frame_image_resized = frame_image.resize((new_width, new_height), Image.ANTIALIAS)
+        working_frame = frame.resize(quadrant.width, quadrant.height - true_title_height, self._margin)
+        if quadrant.scalebar:
+            working_frame = self._add_scalebar(working_frame)
+    
+        new_width, new_height = working_frame.size
         x_offset = (quadrant.width - new_width) // 2
         x_pos = quadrant.x_origin + x_offset
         y_offset = (quadrant.height - new_height) // 2
         y_pos = quadrant.y_origin + y_offset + true_title_height // 2
-        base_image.paste(frame_image_resized, (x_pos, y_pos))
-    
-    def _calculate_best_fit(self, image, quadrant, top_margin=0):
-        # Resize the image to take up the maximum available space inside the quadrant.
-        original_width, original_height = image.size
-        aspect_ratio = original_width / original_height
 
-        max_x = int(quadrant.width * (1 - self._margin * 2))
-        max_y = int(quadrant.height * (1 - self._margin * 2)) - top_margin
+        frame_image = Image.open(working_frame.path)
+        base_image.paste(frame_image, (x_pos, y_pos))
 
-        if aspect_ratio > 1:
-            new_width = int(quadrant.width * (1 - self._margin * 2))
-            new_height = int(new_width / aspect_ratio)
-            if new_height > max_y:
-                new_height = max_y
-                new_width = int(new_height * aspect_ratio)
-        else:
-            new_height = max_y
-            new_width = int(new_height / aspect_ratio)
-            if new_width > max_x:
-                new_width = int(quadrant.width * (1 - self._margin * 2))
-                new_height = int(new_width * aspect_ratio)
+    def _add_scalebar(self, frame):
+        image = Image.open(frame.path)
 
-        return new_width, new_height
+        image_width, image_height = image.size
+        scalebar_length_px = image_width // 4
+        scalebar_length_km = scalebar_length_px * frame.scale / 1000
+        scalebar_height = image_height // 20
+
+        label = f"{scalebar_length_km:.2f} km"
+        font_size = 1
+        font = ImageFont.truetype("arial.ttf", font_size)
+        label_width, label_height = font.getsize(label)
+        while label_height < scalebar_height * 0.75:
+            font = ImageFont.truetype("arial.ttf", font_size)
+            label_width, label_height = font.getsize(label)
+            font_size += 1
+
+        label_x = image_width - label_width
+        label_y = image_height - label_height
+        draw = ImageDraw.Draw(image)
+        draw.text((label_x, label_y), label, font=font, fill=(0, 0, 0, 128))
+        draw.line((image_width - scalebar_length_px, image_height - scalebar_height,
+                   image_width, image_height - scalebar_height),
+                  fill=(0, 0, 0, 128), width=scalebar_height - label_height)
+
+        out_path = TempFileManager.mktmp(suffix=".png")
+        image.save(out_path)
+
+        return Frame(frame.year, out_path, frame.scale)

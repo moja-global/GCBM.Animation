@@ -2,6 +2,7 @@ import os
 import sys
 import sqlite3
 import json
+import logging
 from glob import glob
 from argparse import ArgumentParser
 from gcbmanimation.util.disturbancelayerconfigurer import DisturbanceLayerConfigurer
@@ -42,7 +43,7 @@ if __name__ == "__main__":
         if not bounding_box_file:
             bounding_box_file = bounding_box_candidates[0]
 
-    print(f"Using bounding box: {bounding_box_file}")
+    logging.info(f"Using bounding box: {bounding_box_file}")
     bounding_box = BoundingBox(bounding_box_file)
 
     disturbance_configurer = DisturbanceLayerConfigurer()
