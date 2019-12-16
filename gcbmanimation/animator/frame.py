@@ -89,26 +89,29 @@ class Frame:
 
         return Frame(self._year, out_path, scale=None)
 
-    def resize(self, width, height, margin):
-        # Resize the image as close as possible to the specified width and height
-        # while preserving the aspect ratio.
+    def resize(self, max_width, max_height):
+        '''
+        Resizes the image as closely as possible to the specified width and height
+        while preserving the aspect ratio.
+
+        Arguments:
+        'max_width' -- the new maximum width.
+        'max_height' -- the new maximum height.
+        '''
         original_width, original_height = self.size
         aspect_ratio = original_width / original_height
 
-        max_x = int(width * (1 - margin * 2))
-        max_y = int(height * (1 - margin * 2))
-
         if aspect_ratio > 1:
-            new_width = int(width * (1 - margin * 2))
+            new_width = max_width
             new_height = int(new_width / aspect_ratio)
-            if new_height > max_y:
-                new_height = max_y
+            if new_height > max_height:
+                new_height = max_height
                 new_width = int(new_height * aspect_ratio)
         else:
-            new_height = max_y
+            new_height = max_height
             new_width = int(new_height / aspect_ratio)
-            if new_width > max_x:
-                new_width = int(width * (1 - margin * 2))
+            if new_width > max_width:
+                new_width = max_width
                 new_height = int(new_width * aspect_ratio)
 
         out_path = TempFileManager.mktmp(suffix=".png")

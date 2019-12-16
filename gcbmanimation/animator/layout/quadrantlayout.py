@@ -119,9 +119,13 @@ class QuadrantLayout:
             true_title_height = int(title_height) + int(base_height * 0.01)
             title_x_pos = int(quadrant.x_origin + quadrant.width / 2 - title_width / 2)
             title_y_pos = int(quadrant.y_origin + true_title_height // 2)
-            ImageDraw.Draw(base_image).text((title_x_pos, title_y_pos), quadrant.title, (0, 0, 0, 255), font=font)
+            ImageDraw.Draw(base_image).text(
+                (title_x_pos, title_y_pos), quadrant.title, (0, 0, 0, 255), font=font)
 
-        working_frame = frame.resize(quadrant.width, quadrant.height - true_title_height, self._margin)
+        working_frame = frame.resize(
+            int(quadrant.width * (1 - self._margin * 2)),
+            int((quadrant.height - true_title_height) * (1 - self._margin * 2)))
+
         if quadrant.scalebar:
             working_frame = self._add_scalebar(working_frame)
     
