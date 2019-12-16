@@ -97,6 +97,9 @@ class Frame:
         Arguments:
         'max_width' -- the new maximum width.
         'max_height' -- the new maximum height.
+
+        Returns the resized image as a new Frame with the same year as this one
+        and updated scale reflecting the new pixel size in metres.
         '''
         original_width, original_height = self.size
         aspect_ratio = original_width / original_height
