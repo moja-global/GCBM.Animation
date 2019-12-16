@@ -93,7 +93,9 @@ class LayerCollection:
             for layer in working_layers]
 
         missing_years = render_years - layer_years
-        rendered_layers.extend([Frame(year, background_frame.path) for year in missing_years])
+        rendered_layers.extend([
+            Frame(year, background_frame.path, background_frame.scale)
+            for year in missing_years])
         
         return rendered_layers, legend
 
