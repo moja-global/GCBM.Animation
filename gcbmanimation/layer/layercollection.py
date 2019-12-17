@@ -66,6 +66,8 @@ class LayerCollection:
         layer_years = {layer.year for layer in self._layers}
         render_years = set(range(start_year, end_year + 1)) if start_year and end_year else layer_years
         working_layers = [layer for layer in self._layers if layer.year in render_years]
+        if bounding_box:
+            working_layers = [bounding_box.crop(layer) for layer in working_layers]
 
         common_interpretation = None
         interpreted = any((layer.has_interpretation for layer in working_layers))
@@ -84,12 +86,12 @@ class LayerCollection:
 
         background_layer = bounding_box or working_layers[0]
         background_frame = background_layer.flatten().render(
-            {1: {"color": self._background_color}}, bounding_box, transparent=False)
+            {1: {"color": self._background_color}}, transparent=False)
 
         working_layers = [self._merge_layers(layers) for layers in layers_by_year.values()]
         legend = self._create_legend(working_layers, common_interpretation)
         rendered_layers = [
-            layer.render(legend, bounding_box).composite(background_frame, send_to_bottom=True)
+            layer.render(legend).composite(background_frame, send_to_bottom=True)
             for layer in working_layers]
 
         missing_years = render_years - layer_years

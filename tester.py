@@ -1,15 +1,21 @@
 import os
 import shutil
+import logging
+import sys
 from glob import glob
 from gcbmanimation.layer.layercollection import LayerCollection
 from gcbmanimation.layer.layer import Layer
 from gcbmanimation.layer.boundingbox import BoundingBox
 from gcbmanimation.util.disturbancelayerconfigurer import DisturbanceLayerConfigurer
-from gcbmanimation.database.sqlitegcbmresultsdatabase import SqliteGcbmResultsDatabase
+from gcbmanimation.provider.sqlitegcbmresultsprovider import SqliteGcbmResultsProvider
+from gcbmanimation.provider.spatialgcbmresultsprovider import SpatialGcbmResultsProvider
 from gcbmanimation.animator.indicator import Indicator
 from gcbmanimation.animator.indicator import Units
 from gcbmanimation.animator.legend import Legend
 from gcbmanimation.animator.animator import Animator
+from gcbmanimation.util.tempfile import TempFileManager
+
+logging.basicConfig(stream=sys.stdout)
 
 # Test a plain old LayerCollection - bounding box is the first layer found.
 layers = LayerCollection(palette="Reds")
@@ -36,8 +42,10 @@ for rendered_layer in disturbance_frames:
     shutil.copyfile(rendered_layer.path, rf"c:\tmp\disturbance_{rendered_layer.year}.png")
 
 # Test an Indioator.
-results_db = SqliteGcbmResultsDatabase(r"C:\Projects\Standalone_Template\processed_output\compiled_gcbm_output.db")
-indicator = Indicator(results_db, "NPP", r"C:\Projects\Standalone_Template\processed_output\spatial\NPP*.tiff", graph_units=Units.Ktc, palette="Greens")
+results_db = SqliteGcbmResultsProvider(r"C:\Projects\Standalone_Template\processed_output\compiled_gcbm_output.db")
+indicator = Indicator(
+    results_db, "NPP", r"C:\Projects\Standalone_Template\processed_output\spatial\NPP*.tiff",
+    graph_units=Units.Ktc, palette="Greens")
 
 # Render using the bounding box from earlier and save the output for viewing.
 for frame in indicator.render_map_frames(bounding_box=bbox)[0]:
@@ -54,3 +62,32 @@ shutil.copyfile(legend_frame.path, rf"c:\tmp\legend.png")
 # Test animator.
 animator = Animator(disturbance_layers, [indicator], r"c:\tmp")
 animator.render(bbox, 2010, 2020)
+
+# Test cropped area.
+import mojadata.boundingbox as moja
+from mojadata.layer.vectorlayer import VectorLayer
+from mojadata.layer.attribute import Attribute
+from mojadata.layer.filter.valuefilter import ValueFilter
+
+moja_bbox = moja.BoundingBox(VectorLayer(
+    "bbox", r"C:\Projects\Standalone_Template\layers\raw\inventory\inventory.shp",
+    Attribute("PolyID", filter=ValueFilter(1))))
+
+moja_bbox.init()
+cropped_bbox = BoundingBox("bounding_box.tiff")
+results_provider = SpatialGcbmResultsProvider(
+    r"C:\Projects\Standalone_Template\processed_output\spatial\NPP*.tiff",
+    per_hectare=True)
+    
+indicator = Indicator(
+    results_provider, "NPP", r"C:\Projects\Standalone_Template\processed_output\spatial\NPP*.tiff",
+    graph_units=Units.Tc, palette="Greens", title="NPP_Cropped")
+
+for frame in indicator.render_graph_frames(bounding_box=cropped_bbox):
+    shutil.copyfile(frame.path, rf"c:\tmp\{indicator.title}_graph_{frame.year}.png")
+
+for frame in indicator.render_map_frames(cropped_bbox)[0]:
+    shutil.copyfile(frame.path, rf"c:\tmp\{indicator.title}_map_{frame.year}.png")
+
+cropped_animator = Animator(disturbance_layers, [indicator], r"c:\tmp")
+cropped_animator.render(cropped_bbox)

@@ -1,9 +1,9 @@
 import os
 import sqlite3
 from collections import OrderedDict
-from gcbmanimation.database.gcbmresultsdatabase import GcbmResultsDatabase
+from gcbmanimation.provider.gcbmresultsprovider import GcbmResultsProvider
 
-class SqliteGcbmResultsDatabase(GcbmResultsDatabase):
+class SqliteGcbmResultsProvider(GcbmResultsProvider):
     '''
     Retrieves non-spatial annual results from a SQLite GCBM results database.
 
@@ -26,14 +26,14 @@ class SqliteGcbmResultsDatabase(GcbmResultsDatabase):
 
     @property
     def simulation_years(self):
-        '''See GcbmResultsDatabase.simulation_years.'''
+        '''See GcbmResultsProvider.simulation_years.'''
         conn = sqlite3.connect(self._path)
         years = conn.execute("SELECT MIN(year), MAX(year) from v_age_indicators").fetchone()
 
         return years
 
-    def get_annual_result(self, indicator, units=1):
-        '''See GcbmResultsDatabase.get_annual_result.'''
+    def get_annual_result(self, indicator, units=1, **kwargs):
+        '''See GcbmResultsProvider.get_annual_result.'''
         conn = sqlite3.connect(self._path)
         table, value_col = self._find_indicator_table(indicator)
         db_result = conn.execute(
@@ -55,7 +55,7 @@ class SqliteGcbmResultsDatabase(GcbmResultsDatabase):
 
     def _find_indicator_table(self, indicator):
         conn = sqlite3.connect(self._path)
-        for table, value_col in SqliteGcbmResultsDatabase.results_tables.items():
+        for table, value_col in SqliteGcbmResultsProvider.results_tables.items():
             if conn.execute(f"SELECT 1 FROM {table} WHERE indicator = ?", [indicator]).fetchone():
                 return table, value_col
 

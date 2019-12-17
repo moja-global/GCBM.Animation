@@ -40,7 +40,7 @@ class Animator:
         disturbance_frames = None
         disturbance_legend = None
         for indicator in self._indicators:
-            graph_frames = indicator.render_graph_frames()
+            graph_frames = indicator.render_graph_frames(bounding_box=bounding_box)
             indicator_frames, indicator_legend = indicator.render_map_frames(bounding_box)
 
             if not start_year or not end_year:

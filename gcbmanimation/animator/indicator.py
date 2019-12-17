@@ -30,7 +30,7 @@ class Indicator:
     indicator from the GCBM results database.
 
     Arguments:
-    'results_database' -- a GcbmResultsDatabase for retrieving the non-spatial
+    'results_database' -- a GcbmResultsProvider for retrieving the non-spatial
         GCBM results.
     'database_indiator' -- the name of an indicator to retrieve from the results
         database.
@@ -93,13 +93,18 @@ class Indicator:
         
         return layers.render(bounding_box, start_year, end_year)
 
-    def render_graph_frames(self):
+    def render_graph_frames(self, **kwargs):
         '''
-        Renders the indidator's non-spatial output into Frame objects. Returns a
-        list of Frames, one for each year of output.
+        Renders the indicator's non-spatial output into a graph.
+
+        Arguments:
+        Any accepted by GCBMResultsProvider and subclasses.
+
+        Returns a list of Frames, one for each year of output.
         '''
         units, units_label = self._graph_units.value
-        indicator_data = self._results_database.get_annual_result(self._database_indicator, units)
+        indicator_data = self._results_database.get_annual_result(
+            self._database_indicator, units, **kwargs)
 
         years = list(indicator_data.keys())
         values = list(indicator_data.values())
@@ -157,7 +162,7 @@ class Indicator:
             layer = Layer(layer_path, year)
             layers.append(layer)
 
-        if layers.empty:
+        if not layers:
             raise IOError(f"No spatial output found for pattern: {self._layer_pattern}")
 
         return layers

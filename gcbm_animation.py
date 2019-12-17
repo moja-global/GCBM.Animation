@@ -6,7 +6,7 @@ import logging
 from glob import glob
 from argparse import ArgumentParser
 from gcbmanimation.util.disturbancelayerconfigurer import DisturbanceLayerConfigurer
-from gcbmanimation.database.sqlitegcbmresultsdatabase import SqliteGcbmResultsDatabase
+from gcbmanimation.provider.sqlitegcbmresultsprovider import SqliteGcbmResultsProvider
 from gcbmanimation.animator.indicator import Indicator
 from gcbmanimation.animator.indicator import Units
 from gcbmanimation.animator.animator import Animator
