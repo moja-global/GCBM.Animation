@@ -86,7 +86,7 @@ class LayerCollection:
 
         background_layer = bounding_box or working_layers[0]
         background_frame = background_layer.flatten().render(
-            {1: {"color": self._background_color}}, transparent=False)
+            {1: {"color": self._background_color}}, bounding_box=bounding_box, transparent=False)
 
         working_layers = [self._merge_layers(layers) for layers in layers_by_year.values()]
         legend = self._create_legend(working_layers, common_interpretation)

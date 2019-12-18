@@ -71,6 +71,7 @@ class Animator:
             video_frames = [imageio.imread(frame.path) for frame in animation_frames]
             video_frames.append(video_frames[-1]) # Duplicate the last frame to display longer.
 
+            os.makedirs(self._output_path, exist_ok=True)
             imageio.mimsave(os.path.join(self._output_path, f"{indicator.title}.wmv"), video_frames, fps=1)
             TempFileManager.cleanup("*.tif")
 

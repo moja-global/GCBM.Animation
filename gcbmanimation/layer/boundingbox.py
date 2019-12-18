@@ -81,14 +81,9 @@ class BoundingBox(Layer):
         if not self._initialized:
             self._init()
 
-        # Reproject if needed.
-        working_path = layer.path
-        if self._projection:
-            working_path = layer.reproject(self._projection).path
-
         # Clip to bounding box geographical area.
         tmp_path = TempFileManager.mktmp(suffix=".tif")
-        gdal.Translate(tmp_path, working_path, projWin=self.min_geographic_bounds)
+        gdal.Translate(tmp_path, layer.path, projWin=self.min_geographic_bounds)
         
         # Clip to bounding box nodata mask.
         calc = "A * (B != {0}) + ((B == {0}) * {1})".format(
@@ -100,13 +95,13 @@ class BoundingBox(Layer):
                        overwrite=True, A=tmp_path, B=self.path)
 
         cropped_layer = Layer(output_path, layer.year, layer.interpretation)
+        if self._projection:
+            cropped_layer = cropped_layer.reproject(self._projection)
 
         return cropped_layer
 
     def _init(self):
-        if self._projection:
-            self._path = self.reproject(self._projection).path
-
+        self._path = self.reproject("EPSG:4326").path
         bbox_path = TempFileManager.mktmp(no_manual_cleanup=True, suffix=".tif")
         gdal.Translate(bbox_path, self._path, projWin=self.min_geographic_bounds)
         self._path = bbox_path

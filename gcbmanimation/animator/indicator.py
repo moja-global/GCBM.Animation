@@ -32,7 +32,7 @@ class Indicator:
     Arguments:
     'results_database' -- a GcbmResultsProvider for retrieving the non-spatial
         GCBM results.
-    'database_indiator' -- the name of an indicator to retrieve from the results
+    'database_indicator' -- the name of an indicator to retrieve from the results
         database.
     'layer_pattern' -- a file pattern (including directory path) in glob format to
         find the spatial outputs for the indicator, i.e. "c:\\my_run\\NPP_*.tif".

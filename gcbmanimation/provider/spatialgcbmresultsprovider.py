@@ -63,8 +63,10 @@ class SpatialGcbmResultsProvider(GcbmResultsProvider):
         working_layer = layer
         multiplier = 1
         if self._per_hectare:
-            new_projection = find_best_projection(layer)
-            working_layer = layer.reproject(new_projection)
+            if "metre" not in layer.info["coordinateSystem"]["wkt"]:
+                new_projection = find_best_projection(layer)
+                working_layer = layer.reproject(new_projection)
+
             one_hectare = 100 ** 2
             pixel_size_m2 = working_layer.scale ** 2
             multiplier = pixel_size_m2 / one_hectare

@@ -14,6 +14,7 @@ from gcbmanimation.animator.indicator import Units
 from gcbmanimation.animator.legend import Legend
 from gcbmanimation.animator.animator import Animator
 from gcbmanimation.util.tempfile import TempFileManager
+from gcbmanimation.util.utmzones import find_best_projection
 
 logging.basicConfig(stream=sys.stdout)
 
@@ -74,7 +75,7 @@ moja_bbox = moja.BoundingBox(VectorLayer(
     Attribute("PolyID", filter=ValueFilter(1))))
 
 moja_bbox.init()
-cropped_bbox = BoundingBox("bounding_box.tiff")
+cropped_bbox = BoundingBox("bounding_box.tiff", find_best_projection(Layer("bounding_box.tiff", 0)))
 results_provider = SpatialGcbmResultsProvider(
     r"C:\Projects\Standalone_Template\processed_output\spatial\NPP*.tiff",
     per_hectare=True)
