@@ -1,17 +1,9 @@
 import os
-import numpy as np
 from glob import glob
-from PIL import Image
 from enum import Enum
-from contextlib import contextmanager
-from matplotlib import image as mpimg
-from matplotlib import pyplot as plt
-from matplotlib import gridspec
 from gcbmanimation.layer.layer import Layer
 from gcbmanimation.layer.layercollection import LayerCollection
-from gcbmanimation.util.tempfile import TempFileManager
-from gcbmanimation.animator.frame import Frame
-Image.MAX_IMAGE_PIXELS = None
+from gcbmanimation.plot.basicresultsplot import BasicResultsPlot
 
 class Units(Enum):
     
@@ -30,14 +22,15 @@ class Indicator:
     indicator from the GCBM results database.
 
     Arguments:
-    'results_database' -- a GcbmResultsProvider for retrieving the non-spatial
-        GCBM results.
-    'database_indicator' -- the name of an indicator to retrieve from the results
-        database.
+    'indicator' -- the short name of the indicator.
     'layer_pattern' -- a file pattern (including directory path) in glob format to
         find the spatial outputs for the indicator, i.e. "c:\\my_run\\NPP_*.tif".
-    'title' -- the indicator title for presentation - uses the database_indicator
-        name if not provided.
+    'results_provider' -- a GcbmResultsProvider for retrieving the non-spatial
+        GCBM results.
+    'provider_filter' -- filter to pass to results_provider to retrieve a single
+        indicator.
+    'title' -- the indicator title for presentation - uses the indicator name if
+        not provided.
     'graph_units' -- a Units enum value for the graph units - result values will
         be divided by this amount.
     'map_units' -- a Units enum value for the map units - spatial output values
@@ -48,15 +41,18 @@ class Indicator:
         name of any seaborn palette (deep, muted, bright, pastel, dark, colorblind,
         hls, husl) or matplotlib colormap. To find matplotlib colormaps:
         from matplotlib import cm; dir(cm)
+    'background_color' -- the background (bounding box) color to use for the map
+        frames.
     '''
 
-    def __init__(self, results_database, database_indicator, layer_pattern,
-                 title=None, graph_units=Units.Tc, map_units=Units.TcPerHa,
-                 palette="Greens", background_color=(255, 255, 255)):
-        self._results_database = results_database
-        self._database_indicator = database_indicator
+    def __init__(self, indicator, layer_pattern, results_provider, provider_filter=None,
+                 title=None, graph_units=Units.Tc, map_units=Units.TcPerHa, palette="Greens",
+                 background_color=(255, 255, 255)):
+        self._indicator = indicator
         self._layer_pattern = layer_pattern
-        self._title = title or database_indicator
+        self._results_provider = results_provider
+        self._provider_filter = provider_filter or {}
+        self._title = title or indicator
         self._graph_units = graph_units or Units.Tc
         self._map_units = map_units or Units.TcPerHa
         self._palette = palette or "Greens"
@@ -66,6 +62,11 @@ class Indicator:
     def title(self):
         '''Gets the indicator title.'''
         return self._title
+
+    @property
+    def indicator(self):
+        '''Gets the short title for the indicator.'''
+        return self._indicator
 
     @property
     def map_units(self):
@@ -88,7 +89,7 @@ class Indicator:
         Returns a list of colorized Frames, one for each year of output, and a
         legend in dictionary format describing the colors.
         '''
-        start_year, end_year = self._results_database.simulation_years
+        start_year, end_year = self._results_provider.simulation_years
         layers = self._find_layers()
         
         return layers.render(bounding_box, start_year, end_year)
@@ -102,58 +103,9 @@ class Indicator:
 
         Returns a list of Frames, one for each year of output.
         '''
-        units, units_label = self._graph_units.value
-        indicator_data = self._results_database.get_annual_result(
-            self._database_indicator, units, **kwargs)
-
-        years = list(indicator_data.keys())
-        values = list(indicator_data.values())
-
-        frames = []
-        for i, year in enumerate(years):
-            with self._figure(figsize=(10, 5)) as fig:
-                y_label = f"{self._title} ({units_label})"
-                plt.xlabel("Years", fontweight="bold", fontsize=14)
-                plt.ylabel(y_label, fontweight="bold", fontsize=14)
-                plt.axhline(0, color="darkgray")
-                plt.plot(years, values, marker="o", linestyle="--", color="navy")
-                
-                # Mark the current year.
-                plt.plot(year, indicator_data[year], marker="o", linestyle="--", color="b", markersize=15)
-
-                plt.axis([None, None, min(values) - 0.1, max(values) + 0.1])
-                plt.tick_params(axis="both", labelsize=14)
-                plt.xticks(fontsize=12, fontweight="bold")
-                plt.yticks(fontsize=12, fontweight="bold")
-
-                # Remove scientific notation.
-                ax = plt.gca()
-                ax.get_yaxis().get_major_formatter().set_useOffset(False)
-
-                # Add a vertical line at the current year.
-                pos = year - 0.2 if i == len(years) - 1 else year + 0.2
-                plt.axvspan(year, pos, facecolor="g", alpha=0.5)
-
-                # Shade underneath the value series behind the current year.
-                shaded_years = np.array(years)
-                shaded_values = np.array(values).copy()
-                shaded_values[shaded_years > year] = np.nan
-                plt.fill_between(shaded_years, shaded_values, facecolor="gainsboro")
-
-                out_file = TempFileManager.mktmp(suffix=".png")
-                fig.savefig(out_file, bbox_inches="tight", dpi=300)
-                frames.append(Frame(year, out_file))
-
-        return frames
-
-    @contextmanager
-    def _figure(self, *args, **kwargs):
-        fig = plt.figure(*args, **kwargs)
-        try:
-            yield fig
-        finally:
-            plt.close(fig)
-            plt.clf()
+        plot = BasicResultsPlot(self._indicator, self._results_provider, self._graph_units)
+        
+        return plot.render(**self._provider_filter, **kwargs)
        
     def _find_layers(self):
         layers = LayerCollection(palette=self._palette, background_color=self._background_color)

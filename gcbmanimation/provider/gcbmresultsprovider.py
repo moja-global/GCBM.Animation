@@ -9,13 +9,12 @@ class GcbmResultsProvider:
         '''The start and end year of the simulation.'''
         raise NotImplementedError()
 
-    def get_annual_result(self, indicator, units=1, **kwargs):
+    def get_annual_result(self, units=1, **kwargs):
         '''
         Gets an ordered collection of annual results for a particular indicator,
         optionally dividing the values by the specified units.
 
         Arguments:
-        'indicator' -- the indicator to retrieve.
         'units' -- optional units to divide the result values by.
 
         Additional arguments vary by subclass.

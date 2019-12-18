@@ -32,7 +32,7 @@ class SqliteGcbmResultsProvider(GcbmResultsProvider):
 
         return years
 
-    def get_annual_result(self, indicator, units=1, **kwargs):
+    def get_annual_result(self, units=1, indicator=None, **kwargs):
         '''See GcbmResultsProvider.get_annual_result.'''
         conn = sqlite3.connect(self._path)
         table, value_col = self._find_indicator_table(indicator)

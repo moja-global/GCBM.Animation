@@ -83,7 +83,8 @@ class BoundingBox(Layer):
 
         # Clip to bounding box geographical area.
         tmp_path = TempFileManager.mktmp(suffix=".tif")
-        gdal.Translate(tmp_path, layer.path, projWin=self.min_geographic_bounds)
+        gdal.Translate(tmp_path, layer.path, projWin=self.min_geographic_bounds,
+                       options=["BIGTIFF=YES", "COMPRESS=DEFLATE"])
         
         # Clip to bounding box nodata mask.
         calc = "A * (B != {0}) + ((B == {0}) * {1})".format(
@@ -103,6 +104,8 @@ class BoundingBox(Layer):
     def _init(self):
         self._path = self.reproject("EPSG:4326").path
         bbox_path = TempFileManager.mktmp(no_manual_cleanup=True, suffix=".tif")
-        gdal.Translate(bbox_path, self._path, projWin=self.min_geographic_bounds)
+        gdal.Translate(bbox_path, self._path, projWin=self.min_geographic_bounds,
+                       options=["BIGTIFF=YES", "COMPRESS=DEFLATE"])
+
         self._path = bbox_path
         self._initialized = True

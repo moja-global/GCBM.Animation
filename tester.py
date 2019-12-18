@@ -45,8 +45,8 @@ for rendered_layer in disturbance_frames:
 # Test an Indioator.
 results_db = SqliteGcbmResultsProvider(r"C:\Projects\Standalone_Template\processed_output\compiled_gcbm_output.db")
 indicator = Indicator(
-    results_db, "NPP", r"C:\Projects\Standalone_Template\processed_output\spatial\NPP*.tiff",
-    graph_units=Units.Ktc, palette="Greens")
+    "NPP", r"C:\Projects\Standalone_Template\processed_output\spatial\NPP*.tiff",
+    results_db, {"indicator": "NPP"}, graph_units=Units.Ktc, palette="Greens")
 
 # Render using the bounding box from earlier and save the output for viewing.
 for frame in indicator.render_map_frames(bounding_box=bbox)[0]:
@@ -81,8 +81,8 @@ results_provider = SpatialGcbmResultsProvider(
     per_hectare=True)
     
 indicator = Indicator(
-    results_provider, "NPP", r"C:\Projects\Standalone_Template\processed_output\spatial\NPP*.tiff",
-    graph_units=Units.Tc, palette="Greens", title="NPP_Cropped")
+    "NPP", r"C:\Projects\Standalone_Template\processed_output\spatial\NPP*.tiff", results_provider,
+    graph_units=Units.Tc, palette="Greens", title="NPP Cropped")
 
 for frame in indicator.render_graph_frames(bounding_box=cropped_bbox):
     shutil.copyfile(frame.path, rf"c:\tmp\{indicator.title}_graph_{frame.year}.png")

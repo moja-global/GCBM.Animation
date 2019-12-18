@@ -166,7 +166,7 @@ class Layer:
         'projection' -- the new projection, i.e. NAD83.
         '''
         output_path = TempFileManager.mktmp(suffix=".tif")
-        gdal.Warp(output_path, self._path, dstSRS=projection)
+        gdal.Warp(output_path, self._path, dstSRS=projection, options=["BIGTIFF=YES", "COMPRESS=DEFLATE"])
         reprojected_layer = Layer(output_path, self._year, self._interpretation)
 
         return reprojected_layer

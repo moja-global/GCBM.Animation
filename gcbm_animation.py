@@ -56,10 +56,10 @@ if __name__ == "__main__":
         graph_units = find_units(indicator_config["graph_units"]) if "graph_units" in indicator_config else Units.Tc
         map_units = find_units(indicator_config["map_units"]) if "map_units" in indicator_config else Units.TcPerHa
         indicators.append(Indicator(
-            results_db, indicator_config["database_indicator"],
-            os.path.join(args.spatial_results, indicator_config["file_pattern"]),
+            indicator_config["database_indicator"],
+            os.path.join(args.spatial_results, indicator_config["file_pattern"]), results_db,
+            {"indicator": indicator_config["database_indicator"]}, 
             indicator_config.get("title"), graph_units, map_units, indicator_config.get("palette")))
 
     animator = Animator(disturbance_layers, indicators, args.output_path)
-    start_year, end_year = results_db.simulation_years
-    animator.render(bounding_box, start_year, end_year)
+    animator.render(bounding_box)

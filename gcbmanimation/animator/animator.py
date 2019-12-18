@@ -51,7 +51,7 @@ class Animator:
                 disturbance_frames, disturbance_legend = self._disturbances.render(
                     bounding_box, start_year, end_year)
 
-            indicator_legend_title = f"{indicator.title} ({indicator.map_units.value[1]})"
+            indicator_legend_title = f"{indicator.indicator} ({indicator.map_units.value[1]})"
             legend_frame = Legend({
                 "Disturbances": disturbance_legend,
                 indicator_legend_title: indicator_legend
@@ -65,7 +65,7 @@ class Animator:
                 title = f"{indicator.title}, Year: {year}"
                 animation_frames.append(layout.render(
                     disturbance_frame, indicator_frame, graph_frame, legend_frame,
-                    "Disturbances", indicator_legend_title, indicator.title,
+                    "Disturbances", indicator_legend_title, indicator.indicator,
                     title=title, dimensions=(3840, 2160)))
 
             video_frames = [imageio.imread(frame.path) for frame in animation_frames]

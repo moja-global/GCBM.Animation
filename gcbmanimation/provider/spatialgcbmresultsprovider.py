@@ -28,7 +28,7 @@ class SpatialGcbmResultsProvider(GcbmResultsProvider):
         layers = self._find_layers()
         return min((l.year for l in layers)), max((l.year for l in layers))
 
-    def get_annual_result(self, indicator, units=1, bounding_box=None, **kwargs):
+    def get_annual_result(self, units=1, bounding_box=None, **kwargs):
         '''See GcbmResultsProvider.get_annual_result.'''
         layers = self._find_layers()
 
