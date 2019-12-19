@@ -5,12 +5,14 @@ import sys
 from glob import glob
 from gcbmanimation.layer.layercollection import LayerCollection
 from gcbmanimation.layer.layer import Layer
+from gcbmanimation.layer.layer import BlendMode
 from gcbmanimation.layer.boundingbox import BoundingBox
 from gcbmanimation.util.disturbancelayerconfigurer import DisturbanceLayerConfigurer
 from gcbmanimation.provider.sqlitegcbmresultsprovider import SqliteGcbmResultsProvider
 from gcbmanimation.provider.spatialgcbmresultsprovider import SpatialGcbmResultsProvider
-from gcbmanimation.animator.indicator import Indicator
-from gcbmanimation.animator.indicator import Units
+from gcbmanimation.indicator.indicator import Indicator
+from gcbmanimation.indicator.indicator import Units
+from gcbmanimation.indicator.compositeindicator import CompositeIndicator
 from gcbmanimation.animator.legend import Legend
 from gcbmanimation.animator.animator import Animator
 from gcbmanimation.util.tempfile import TempFileManager
@@ -42,7 +44,7 @@ disturbance_frames, disturbance_legend = disturbance_layers.render(bounding_box=
 for rendered_layer in disturbance_frames:
     shutil.copyfile(rendered_layer.path, rf"c:\tmp\disturbance_{rendered_layer.year}.png")
 
-# Test an Indioator.
+# Test an Indicator.
 results_db = SqliteGcbmResultsProvider(r"C:\Projects\Standalone_Template\processed_output\compiled_gcbm_output.db")
 indicator = Indicator(
     "NPP", r"C:\Projects\Standalone_Template\processed_output\spatial\NPP*.tiff",
@@ -64,6 +66,19 @@ shutil.copyfile(legend_frame.path, rf"c:\tmp\legend.png")
 animator = Animator(disturbance_layers, [indicator], r"c:\tmp")
 animator.render(bbox, 2010, 2020)
 
+# Test a composite indicator.
+composite_indicator = CompositeIndicator(
+    "Composite Age", {
+        r"C:\Projects\Standalone_Template\processed_output\spatial\Age_*.tiff": BlendMode.Add,
+        r"C:\Projects\Standalone_Template\processed_output\spatial\Age2*.tiff": BlendMode.Add
+    }, graph_units=Units.Blank, map_units=Units.Blank)
+
+for frame in composite_indicator.render_map_frames(bounding_box=bbox)[0]:
+    shutil.copyfile(frame.path, rf"c:\tmp\{composite_indicator.title}_map_{frame.year}.png")
+
+for frame in composite_indicator.render_graph_frames():
+    shutil.copyfile(frame.path, rf"c:\tmp\{composite_indicator.title}_graph_{frame.year}.png")
+    
 # Test cropped area.
 import mojadata.boundingbox as moja
 from mojadata.layer.vectorlayer import VectorLayer

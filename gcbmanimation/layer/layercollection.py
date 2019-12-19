@@ -4,6 +4,7 @@ import seaborn as sns
 from itertools import chain
 from collections import defaultdict
 from gcbmanimation.layer.layer import Layer
+from gcbmanimation.layer.layer import BlendMode
 from gcbmanimation.animator.frame import Frame
 from gcbmanimation.util.tempfile import TempFileManager
 
@@ -37,6 +38,11 @@ class LayerCollection:
         '''Checks if this collection is empty.'''
         return not self._layers
 
+    @property
+    def layers(self):
+        '''Gets the layers in this collection.'''
+        return list(self._layers)
+
     def append(self, layer):
         '''Appends a layer to the collection.'''
         self._layers.append(layer)
@@ -44,6 +50,33 @@ class LayerCollection:
     def merge(self, other):
         '''Merges another LayerCollection's layers into this one.'''
         self._layers.extend(other._layers)
+
+    def blend(self, other, method=BlendMode.Add):
+        '''Blends the layers in this collection with the layers in another.'''
+        blended_collection = LayerCollection(palette=self._palette, background_color=self._background_color)
+        years = set(chain((layer.year for layer in self._layers), (layer.year for layer in other._layers)))
+        for year in years:
+            local_layers = list(filter(lambda layer: layer.year == year, self._layers))
+            other_layers = list(filter(lambda layer: layer.year == year, other._layers))
+            if len(local_layers) > 1 or len(other_layers) > 1:
+                raise RuntimeError("Cannot blend collections containing more than one layer per year.")
+
+            if local_layers:
+                local_layer = local_layers[0]
+            else:
+                placeholder = self._layers[0].flatten(0) if self._layers else other._layers[0].flatten(0)
+                local_layer = Layer(placeholder.path, year, placeholder.interpretation)
+                    
+            if other_layers:
+                other_layer = other_layers[0]
+            else:
+                placeholder = local_layer.flatten(0)
+                other_layer = Layer(placeholder.path, year, placeholder.interpretation)
+
+            blended_layer = local_layer.blend(other_layer, method)
+            blended_collection.append(blended_layer)
+
+        return blended_collection
 
     def render(self, bounding_box=None, start_year=None, end_year=None):
         '''

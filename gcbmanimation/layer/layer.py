@@ -4,9 +4,17 @@ import logging
 import os
 import subprocess
 import numpy as np
+from enum import Enum
+from osgeo.scripts import gdal_calc
 from geopy.distance import distance
 from gcbmanimation.util.tempfile import TempFileManager
 from gcbmanimation.animator.frame import Frame
+
+class BlendMode(Enum):
+    
+    Add      = "+"
+    Subtract = "-"
+
 
 class Layer:
     '''
@@ -142,16 +150,16 @@ class Layer:
 
         return reclassified_layer
 
-    def flatten(self):
+    def flatten(self, flattened_value=1):
         '''
-        Flattens a copy of this layer: all non-nodata pixels become 1.
+        Flattens a copy of this layer: all non-nodata pixels become the target value.
         Returns a new flattened Layer object.
         '''
         logging.info(f"Flattening {self._path}")
         raster = gdal.Open(self._path)
         band = raster.GetRasterBand(1)
         raster_data = band.ReadAsArray()
-        raster_data[raster_data != self.nodata_value] = 1
+        raster_data[raster_data != self.nodata_value] = flattened_value
         output_path = TempFileManager.mktmp(suffix=".tif")
         self._save_as(raster_data, self.nodata_value, output_path)
         flattened_layer = Layer(output_path, self.year)
@@ -170,6 +178,16 @@ class Layer:
         reprojected_layer = Layer(output_path, self._year, self._interpretation)
 
         return reprojected_layer
+
+    def blend(self, other, method=BlendMode.Add):
+        '''Blends this layer's values with another.'''
+        calc = f"(A {method.value} B) * (A != {self.nodata_value}) * (B != {other.nodata_value})"
+        output_path = TempFileManager.mktmp(suffix=".tif")
+        gdal_calc.Calc(calc, output_path, self.nodata_value, quiet=True,
+                       creation_options=["BIGTIFF=YES", "COMPRESS=DEFLATE"],
+                       overwrite=True, A=self.path, B=other.path)
+
+        return Layer(output_path, self._year, self._interpretation)
 
     def render(self, legend, bounding_box=None, transparent=True):
         '''

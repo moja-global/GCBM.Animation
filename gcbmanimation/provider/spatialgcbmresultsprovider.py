@@ -18,19 +18,22 @@ class SpatialGcbmResultsProvider(GcbmResultsProvider):
         annual results to be correct.
     '''
 
-    def __init__(self, pattern, per_hectare=True):
+    def __init__(self, pattern=None, layers=None, per_hectare=True):
         self._pattern = pattern
+        self._layers = layers
         self._per_hectare = per_hectare
+        if not (pattern or layers):
+            raise RuntimeError("Must provide either a file pattern or a list of Layer objects")
 
     @property
     def simulation_years(self):
         '''See GcbmResultsProvider.simulation_years.'''
-        layers = self._find_layers()
+        layers = self._layers or self._find_layers()
         return min((l.year for l in layers)), max((l.year for l in layers))
 
     def get_annual_result(self, units=1, bounding_box=None, **kwargs):
         '''See GcbmResultsProvider.get_annual_result.'''
-        layers = self._find_layers()
+        layers = self._layers or self._find_layers()
 
         data = OrderedDict()
         start_year, end_year = self.simulation_years
