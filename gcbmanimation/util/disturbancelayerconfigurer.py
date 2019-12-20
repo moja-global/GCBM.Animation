@@ -32,14 +32,17 @@ class DisturbanceLayerConfigurer:
 
         study_area = json.load(open(study_area_path, "rb"))
         layers = study_area["layers"]
-        disturbance_layers = [layer for layer in study_area["layers"] if "disturbance" in layer.get("tags", [])]
+        disturbance_layers = [layer for layer in study_area["layers"]
+                              if "disturbance" in layer.get("tags", [])]
         
         layer_collection = LayerCollection(palette=self._palette)
-
         study_area_dir = os.path.dirname(study_area_path)
         for layer in disturbance_layers:
             layer_tif = os.path.join(study_area_dir, f"{layer['name']}_moja.tiff")
-            layer_metadata_file = os.path.join(study_area_dir, f"{layer['name']}_moja", f"{layer['name']}_moja.json")
+            layer_metadata_file = os.path.join(
+                study_area_dir,
+                f"{layer['name']}_moja", f"{layer['name']}_moja.json")
+
             if not self._files_exist(layer_tif, layer_metadata_file):
                 continue
 
