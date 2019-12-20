@@ -11,7 +11,7 @@ from gcbmanimation.util.disturbancelayerconfigurer import DisturbanceLayerConfig
 from gcbmanimation.provider.sqlitegcbmresultsprovider import SqliteGcbmResultsProvider
 from gcbmanimation.provider.spatialgcbmresultsprovider import SpatialGcbmResultsProvider
 from gcbmanimation.indicator.indicator import Indicator
-from gcbmanimation.indicator.indicator import Units
+from gcbmanimation.layer.units import Units
 from gcbmanimation.indicator.compositeindicator import CompositeIndicator
 from gcbmanimation.animator.legend import Legend
 from gcbmanimation.animator.animator import Animator
@@ -69,9 +69,9 @@ animator.render(bbox, 2010, 2020)
 # Test a composite indicator.
 composite_indicator = CompositeIndicator(
     "Composite Age", {
-        r"C:\Projects\Standalone_Template\processed_output\spatial\Age_*.tiff": BlendMode.Add,
-        r"C:\Projects\Standalone_Template\processed_output\spatial\Age2*.tiff": BlendMode.Add
-    }, graph_units=Units.Blank, map_units=Units.Blank)
+        r"C:\Projects\Standalone_Template\processed_output\spatial\NPP_*.tiff": BlendMode.Add,
+        r"C:\Projects\Standalone_Template\processed_output\spatial\Ecosystem_Removals_*.tiff": BlendMode.Subtract
+    })
 
 for frame in composite_indicator.render_map_frames(bounding_box=bbox)[0]:
     shutil.copyfile(frame.path, rf"c:\tmp\{composite_indicator.title}_map_{frame.year}.png")

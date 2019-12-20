@@ -23,7 +23,10 @@
   <ItemGroup>
     <Compile Include="gcbmanimation\animator\animator.py" />
     <Compile Include="gcbmanimation\animator\frame.py" />
-    <Compile Include="gcbmanimation\animator\indicator.py">
+    <Compile Include="gcbmanimation\indicator\compositeindicator.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="gcbmanimation\indicator\indicator.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="gcbmanimation\animator\layout\__init__.py">
@@ -36,13 +39,32 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="gcbmanimation\animator\__init__.py" />
-    <Compile Include="gcbmanimation\database\gcbmresultsdatabase.py">
+    <Compile Include="gcbmanimation\indicator\__init__.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="gcbmanimation\database\sqlitegcbmresultsdatabase.py">
+    <Compile Include="gcbmanimation\layer\units.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="gcbmanimation\database\__init__.py">
+    <Compile Include="gcbmanimation\plot\basicresultsplot.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="gcbmanimation\plot\resultsplot.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="gcbmanimation\plot\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="gcbmanimation\provider\gcbmresultsprovider.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="gcbmanimation\provider\spatialgcbmresultsprovider.py" />
+    <Compile Include="gcbmanimation\provider\sqlitegcbmresultsprovider.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="gcbmanimation\provider\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="gcbmanimation\util\utmzones.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="gcbm_animation.py" />
@@ -53,13 +75,16 @@
     <Compile Include="gcbmanimation\util\disturbancelayerconfigurer.py" />
     <Compile Include="gcbmanimation\util\tempfile.py" />
     <Compile Include="gcbmanimation\util\__init__.py" />
+    <Compile Include="setup.py" />
     <Compile Include="tester.py" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="gcbmanimation\" />
     <Folder Include="gcbmanimation\animator\" />
     <Folder Include="gcbmanimation\animator\layout\" />
-    <Folder Include="gcbmanimation\database\" />
+    <Folder Include="gcbmanimation\indicator\" />
+    <Folder Include="gcbmanimation\plot\" />
+    <Folder Include="gcbmanimation\provider\" />
     <Folder Include="gcbmanimation\layer\" />
     <Folder Include="gcbmanimation\util\" />
   </ItemGroup>

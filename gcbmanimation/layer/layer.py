@@ -9,6 +9,7 @@ from osgeo.scripts import gdal_calc
 from geopy.distance import distance
 from gcbmanimation.util.tempfile import TempFileManager
 from gcbmanimation.animator.frame import Frame
+from gcbmanimation.layer.units import Units
 
 class BlendMode(Enum):
     
@@ -28,12 +29,14 @@ class Layer:
     'year' -- the year the layer applies to
     'interpretation' -- optional attribute table for the raster; should be a
         dictionary of pixel value to interpretation, i.e. {1: "Wildfire"}
+    'units' -- the units the layer's pixel values are in
     '''
 
-    def __init__(self, path, year, interpretation=None):
+    def __init__(self, path, year, interpretation=None, units=Units.TcPerHa):
         self._path = path
         self._year = int(year)
         self._interpretation = interpretation
+        self._units = units
         self._info = None
 
     @property
@@ -100,7 +103,7 @@ class Layer:
             pixel_size_m = abs(float(self.info["geoTransform"][1]))
         else:
             origin_x, pixel_size, _, origin_y, *_ = self.info["geoTransform"]
-            pixel_size_m = distance((origin_y, origin_x), (origin_y, origin_x + pixel_size)).km * 1000
+            pixel_size_m = distance((origin_y, origin_x), (origin_y, origin_x + pixel_size)).m
 
         return pixel_size_m
 
@@ -110,6 +113,72 @@ class Layer:
         band = raster.GetRasterBand(1)
         
         return band.GetHistogram(min=min_value, max=max_value, buckets=buckets)
+
+    def convert_units(self, units):
+        '''
+        Converts this layer's values into new units - both scale and area type
+        (per hectare or absolute).
+
+        Arguments:
+        'units' -- a new Units enum value to convert to
+
+        Returns a copy of this layer in the new units as a new Layer object.
+        '''
+        output_path = TempFileManager.mktmp(suffix=".tif")
+        one_hectare = 100 ** 2
+
+        current_units_tc, current_units_name = self._units.value
+        new_units_tc, new_units_name = units.value
+        unit_conversion = current_units_tc / new_units_tc
+
+        current_per_ha = "/ha/" in current_units_name
+        new_per_ha = "/ha/" in new_units_name
+
+        simple_conversion_calc = None
+        if current_per_ha == new_per_ha:
+            simple_conversion_calc = " ".join((
+                f"(A * {unit_conversion})",
+                f"* (A != {self.nodata_value})",
+                f"+ ((A == {self.nodata_value}) * {self.nodata_value})"))
+        elif "metre" in self.info["coordinateSystem"]["wkt"]:
+            per_ha_conversion_op = "*" if current_per_ha else "/"
+            _, pixel_size, *_ = self.info["geoTransform"]
+            pixel_size_m2 = float(pixel_size) ** 2
+            per_ha_modifier = pixel_size_m2 / one_hectare if current_per_ha != new_per_ha else 1
+            simple_conversion_calc = " ".join((
+                f"(A * {unit_conversion} {per_ha_conversion_op} {per_ha_modifier})",
+                f"* (A != {self.nodata_value})",
+                f"+ ((A == {self.nodata_value}) * {self.nodata_value})"))
+
+        if simple_conversion_calc:
+            gdal_calc.Calc(simple_conversion_calc, output_path, self.nodata_value, quiet=True,
+                           creation_options=["BIGTIFF=YES", "COMPRESS=DEFLATE"],
+                           overwrite=True, A=self.path)
+
+            return Layer(output_path, self._year, self._interpretation)
+
+        raster = gdal.Open(self._path)
+        band = raster.GetRasterBand(1)
+        raster_data = band.ReadAsArray()
+        width = raster.RasterXSize
+        height = raster.RasterYSize
+        origin_x, pixel_size_x, _, origin_y, _, pixel_size_y = raster.GetGeoTransform()
+        for row in range(height):
+            for col in range(width):
+                lat = origin_y - pixel_size_y * row
+                lon = origin_x + pixel_size_x * col
+                lat_size_m = distance((lat, lon), (lat - pixel_size_y, lon)).m
+                lon_size_m = distance((lat, lon), (lat, lon + pixel_size_x)).m
+                pixel_size_ha = lat_size_m * lon_size_m / one_hectare
+                pixel_value = raster_data[row][col]
+                if pixel_value != self.nodata_value:
+                    raster_data[row][col] = unit_conversion * (
+                        pixel_value * pixel_size_ha if current_per_ha
+                        else pixel_value / pixel_size_ha)
+
+        self._save_as(raster_data, self.nodata_value, output_path)
+        
+        return Layer(output_path, self._year, self._interpretation)
 
     def reclassify(self, new_interpretation, nodata_value=0):
         '''

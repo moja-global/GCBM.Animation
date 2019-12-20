@@ -8,7 +8,7 @@ from argparse import ArgumentParser
 from gcbmanimation.util.disturbancelayerconfigurer import DisturbanceLayerConfigurer
 from gcbmanimation.provider.sqlitegcbmresultsprovider import SqliteGcbmResultsProvider
 from gcbmanimation.indicator.indicator import Indicator
-from gcbmanimation.indicator.indicator import Units
+from gcbmanimation.layer.units import Units
 from gcbmanimation.animator.animator import Animator
 from gcbmanimation.layer.boundingbox import BoundingBox
 

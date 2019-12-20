@@ -1,7 +1,7 @@
 import os
 from glob import glob
 from gcbmanimation.indicator.indicator import Indicator
-from gcbmanimation.indicator.indicator import Units
+from gcbmanimation.layer.units import Units
 from gcbmanimation.provider.spatialgcbmresultsprovider import SpatialGcbmResultsProvider
 from gcbmanimation.plot.basicresultsplot import BasicResultsPlot
 from gcbmanimation.layer.layercollection import LayerCollection
