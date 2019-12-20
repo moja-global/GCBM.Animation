@@ -124,6 +124,9 @@ class Layer:
 
         Returns a copy of this layer in the new units as a new Layer object.
         '''
+        if self._units == units:
+            return self
+
         output_path = TempFileManager.mktmp(suffix=".tif")
         one_hectare = 100 ** 2
 

@@ -4,6 +4,7 @@ import gdal
 from glob import glob
 from collections import OrderedDict
 from gcbmanimation.layer.layer import Layer
+from gcbmanimation.layer.units import Units
 from gcbmanimation.provider.gcbmresultsprovider import GcbmResultsProvider
 from gcbmanimation.util.utmzones import find_best_projection
 
@@ -13,15 +14,13 @@ class SpatialGcbmResultsProvider(GcbmResultsProvider):
 
     Arguments:
     'pattern' -- glob pattern for spatial layers to read.
-    'per_hectare' -- whether the values in the spatial layers are absolute or
-        per hectare; this must correctly match the layer format in order for the
-        annual results to be correct.
+    'layers' -- instead of specifying a file pattern to search for, a list of Layer
+        objects can be provided directly.
     '''
 
-    def __init__(self, pattern=None, layers=None, per_hectare=True):
+    def __init__(self, pattern=None, layers=None):
         self._pattern = pattern
         self._layers = layers
-        self._per_hectare = per_hectare
         if not (pattern or layers):
             raise RuntimeError("Must provide either a file pattern or a list of Layer objects")
 
@@ -31,7 +30,7 @@ class SpatialGcbmResultsProvider(GcbmResultsProvider):
         layers = self._layers or self._find_layers()
         return min((l.year for l in layers)), max((l.year for l in layers))
 
-    def get_annual_result(self, units=1, bounding_box=None, **kwargs):
+    def get_annual_result(self, units=Units.Tc, bounding_box=None, **kwargs):
         '''See GcbmResultsProvider.get_annual_result.'''
         layers = self._layers or self._find_layers()
 
@@ -42,16 +41,22 @@ class SpatialGcbmResultsProvider(GcbmResultsProvider):
             if bounding_box:
                 layer = bounding_box.crop(layer)
 
-            value = self._sum_pixels(layer) / units
+            layer = layer.convert_units(units)
+            value = self._sum_pixels(layer)
             data[year] = value
 
         return data
 
     def _find_layers(self):
+        pattern = self._pattern
+        units = Units.TcPerHa
+        if isinstance(self._pattern, tuple):
+            pattern, units = self._pattern
+
         layers = []
-        for layer_path in glob(self._pattern):
+        for layer_path in glob(pattern):
             year = os.path.splitext(layer_path)[0][-4:]
-            layer = Layer(layer_path, year)
+            layer = Layer(layer_path, year, units=units)
             layers.append(layer)
 
         if not layers:
@@ -63,21 +68,9 @@ class SpatialGcbmResultsProvider(GcbmResultsProvider):
         return next(filter(lambda layer: layer.year == year, layers), None)
 
     def _sum_pixels(self, layer):
-        working_layer = layer
-        multiplier = 1
-        if self._per_hectare:
-            if "metre" not in layer.info["coordinateSystem"]["wkt"]:
-                new_projection = find_best_projection(layer)
-                working_layer = layer.reproject(new_projection)
-
-            one_hectare = 100 ** 2
-            pixel_size_m2 = working_layer.scale ** 2
-            multiplier = pixel_size_m2 / one_hectare
-
-        raster = gdal.Open(working_layer.path)
+        raster = gdal.Open(layer.path)
         band = raster.GetRasterBand(1)
         raster_data = band.ReadAsArray()
-        raster_data[raster_data == working_layer.nodata_value] = 0
-        raster_data = raster_data * multiplier
+        raster_data[raster_data == layer.nodata_value] = 0
 
         return raster_data.sum()

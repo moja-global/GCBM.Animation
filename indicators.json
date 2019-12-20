@@ -18,7 +18,7 @@
   {
     "title": "AG Biomass",
     "database_indicator": "Aboveground Biomass",
-    "file_pattern": "AG_Biomass_C_*.tiff",
+    "file_pattern": "ha_AG_Biomass_C_*.tiff",
     "palette": "YlGnBu",
     "graph_units": "Mtc"
   }

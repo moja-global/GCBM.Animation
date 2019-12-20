@@ -2,6 +2,7 @@ import os
 import sqlite3
 from collections import OrderedDict
 from gcbmanimation.provider.gcbmresultsprovider import GcbmResultsProvider
+from gcbmanimation.layer.units import Units
 
 class SqliteGcbmResultsProvider(GcbmResultsProvider):
     '''
@@ -32,13 +33,14 @@ class SqliteGcbmResultsProvider(GcbmResultsProvider):
 
         return years
 
-    def get_annual_result(self, units=1, indicator=None, **kwargs):
+    def get_annual_result(self, units=Units.Tc, indicator=None, **kwargs):
         '''See GcbmResultsProvider.get_annual_result.'''
         conn = sqlite3.connect(self._path)
         table, value_col = self._find_indicator_table(indicator)
+        units_tc, _ = units.value
         db_result = conn.execute(
             f"""
-            SELECT years.year, COALESCE(SUM(i.{value_col}), 0) / {units} AS value
+            SELECT years.year, COALESCE(SUM(i.{value_col}), 0) / {units_tc} AS value
             FROM (SELECT DISTINCT year FROM v_age_indicators ORDER BY year) AS years
             LEFT JOIN {table} i
                 ON years.year = i.year

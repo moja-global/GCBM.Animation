@@ -21,11 +21,9 @@ class CompositeIndicator(Indicator):
     'title' -- the indicator title for presentation - uses the indicator name if
         not provided.
     'graph_units' -- a Units enum value for the graph units - result values will
-        be divided by this amount.
+        be converted to these units.
     'map_units' -- a Units enum value for the map units - spatial output values
-        will not be modified, but it is important for this to match the spatial
-        output units for the correct unit labels to be displayed in the rendered
-        Frames.
+        will be converted to these units.
     'palette' -- the color palette to use for the rendered map frames - can be the
         name of any seaborn palette (deep, muted, bright, pastel, dark, colorblind,
         hls, husl) or matplotlib colormap. To find matplotlib colormaps:
@@ -56,7 +54,7 @@ class CompositeIndicator(Indicator):
         self._init()
         start_year, end_year = self._results_provider.simulation_years
         
-        return self._composite_layers.render(bounding_box, start_year, end_year)
+        return self._composite_layers.render(bounding_box, start_year, end_year, self._map_units)
 
     def render_graph_frames(self, **kwargs):
         '''
@@ -81,15 +79,17 @@ class CompositeIndicator(Indicator):
                 layers = self._find_layers(pattern)
                 self._composite_layers = self._composite_layers.blend(layers, blend_mode)
 
-            self._results_provider = SpatialGcbmResultsProvider(
-                layers=self._composite_layers.layers,
-                per_hectare=self._map_units == Units.TcPerHa)
+            self._results_provider = SpatialGcbmResultsProvider(layers=self._composite_layers.layers)
        
     def _find_layers(self, pattern):
+        units = Units.TcPerHa
+        if isinstance(self._layer_pattern, tuple):
+            pattern, units = self._layer_pattern
+
         layers = LayerCollection(palette=self._palette, background_color=self._background_color)
         for layer_path in glob(pattern):
             year = os.path.splitext(layer_path)[0][-4:]
-            layer = Layer(layer_path, year)
+            layer = Layer(layer_path, year, units=units)
             layers.append(layer)
 
         if not layers:

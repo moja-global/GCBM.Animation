@@ -91,9 +91,7 @@ moja_bbox = moja.BoundingBox(VectorLayer(
 
 moja_bbox.init()
 cropped_bbox = BoundingBox("bounding_box.tiff", find_best_projection(Layer("bounding_box.tiff", 0)))
-results_provider = SpatialGcbmResultsProvider(
-    r"C:\Projects\Standalone_Template\processed_output\spatial\NPP*.tiff",
-    per_hectare=True)
+results_provider = SpatialGcbmResultsProvider(r"C:\Projects\Standalone_Template\processed_output\spatial\NPP*.tiff")
     
 indicator = Indicator(
     "NPP", r"C:\Projects\Standalone_Template\processed_output\spatial\NPP*.tiff", results_provider,

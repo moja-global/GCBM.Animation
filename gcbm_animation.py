@@ -49,16 +49,22 @@ if __name__ == "__main__":
     disturbance_configurer = DisturbanceLayerConfigurer()
     disturbance_layers = disturbance_configurer.configure(args.study_area)
 
-    results_db = SqliteGcbmResultsDatabase(args.db_results)
+    results_db = SqliteGcbmResultsProvider(args.db_results)
 
     indicators = []
     for indicator_config in json.load(open(args.config, "rb")):
         graph_units = find_units(indicator_config["graph_units"]) if "graph_units" in indicator_config else Units.Tc
         map_units = find_units(indicator_config["map_units"]) if "map_units" in indicator_config else Units.TcPerHa
+
+        output_file_pattern = indicator_config["file_pattern"]
+        output_file_units = Units.TcPerHa
+        if isinstance(output_file_pattern, list):
+            output_file_pattern, output_file_units = output_file_pattern
+
         indicators.append(Indicator(
             indicator_config["database_indicator"],
-            os.path.join(args.spatial_results, indicator_config["file_pattern"]), results_db,
-            {"indicator": indicator_config["database_indicator"]}, 
+            (os.path.join(args.spatial_results, output_file_pattern), output_file_units),
+            results_db, {"indicator": indicator_config["database_indicator"]}, 
             indicator_config.get("title"), graph_units, map_units, indicator_config.get("palette")))
 
     animator = Animator(disturbance_layers, indicators, args.output_path)

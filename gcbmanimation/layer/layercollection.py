@@ -4,6 +4,7 @@ import seaborn as sns
 from itertools import chain
 from collections import defaultdict
 from gcbmanimation.layer.layer import Layer
+from gcbmanimation.layer.units import Units
 from gcbmanimation.layer.layer import BlendMode
 from gcbmanimation.animator.frame import Frame
 from gcbmanimation.util.tempfile import TempFileManager
@@ -78,7 +79,7 @@ class LayerCollection:
 
         return blended_collection
 
-    def render(self, bounding_box=None, start_year=None, end_year=None):
+    def render(self, bounding_box=None, start_year=None, end_year=None, units=Units.TcPerHa):
         '''
         Renders the collection of layers into colorized Frame objects organized
         by year.
@@ -92,6 +93,8 @@ class LayerCollection:
             along with end_year.
         'end_year' -- optional end year to render to - must be specified along
             with start_year.
+        'units' -- optional units to render the output in (default: tc/ha). Layers
+            in the collection will be converted to these units if necessary.
         
         Returns a list of rendered Frame objects and a legend (dict) describing
         the colors.
@@ -101,6 +104,8 @@ class LayerCollection:
         working_layers = [layer for layer in self._layers if layer.year in render_years]
         if bounding_box:
             working_layers = [bounding_box.crop(layer) for layer in working_layers]
+
+        working_layers = [layer.convert_units(units) for layer in working_layers]
 
         common_interpretation = None
         interpreted = any((layer.has_interpretation for layer in working_layers))

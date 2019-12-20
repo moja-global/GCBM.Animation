@@ -23,15 +23,14 @@ class BasicResultsPlot(ResultsPlot):
 
         Returns a list of Frames, one for each year of output.
         '''
-        units, units_label = self._units.value
-        indicator_data = self._provider.get_annual_result(units, **kwargs)
+        indicator_data = self._provider.get_annual_result(self._units, **kwargs)
         years = list(indicator_data.keys())
         values = list(indicator_data.values())
 
         frames = []
         for i, year in enumerate(years):
             with self._figure(figsize=(10, 5)) as fig:
-                y_label = f"{self._title} ({units_label})"
+                y_label = f"{self._title} ({self._units.name})"
                 plt.xlabel("Years", fontweight="bold", fontsize=14)
                 plt.ylabel(y_label, fontweight="bold", fontsize=14)
                 plt.axhline(0, color="darkgray")

@@ -14,7 +14,10 @@ class Indicator:
     Arguments:
     'indicator' -- the short name of the indicator.
     'layer_pattern' -- a file pattern (including directory path) in glob format to
-        find the spatial outputs for the indicator, i.e. "c:\\my_run\\NPP_*.tif".
+        find the spatial outputs for the indicator, i.e. "c:\\my_run\\NPP_*.tif";
+        can also be specified as a tuple of (file pattern, Units) to specify the
+        native units of the layers (i.e. Units.Tc) - otherwise the default of
+        Units.TcPerHa is used.
     'results_provider' -- a GcbmResultsProvider for retrieving the non-spatial
         GCBM results.
     'provider_filter' -- filter to pass to results_provider to retrieve a single
@@ -22,11 +25,9 @@ class Indicator:
     'title' -- the indicator title for presentation - uses the indicator name if
         not provided.
     'graph_units' -- a Units enum value for the graph units - result values will
-        be divided by this amount.
+        be converted to these units.
     'map_units' -- a Units enum value for the map units - spatial output values
-        will not be modified, but it is important for this to match the spatial
-        output units for the correct unit labels to be displayed in the rendered
-        Frames.
+        will be converted to the target units if necessary.
     'palette' -- the color palette to use for the rendered map frames - can be the
         name of any seaborn palette (deep, muted, bright, pastel, dark, colorblind,
         hls, husl) or matplotlib colormap. To find matplotlib colormaps:
@@ -82,7 +83,7 @@ class Indicator:
         start_year, end_year = self._results_provider.simulation_years
         layers = self._find_layers()
         
-        return layers.render(bounding_box, start_year, end_year)
+        return layers.render(bounding_box, start_year, end_year, self._map_units)
 
     def render_graph_frames(self, **kwargs):
         '''
@@ -98,13 +99,18 @@ class Indicator:
         return plot.render(**self._provider_filter, **kwargs)
        
     def _find_layers(self):
+        pattern = self._layer_pattern
+        units = Units.TcPerHa
+        if isinstance(self._layer_pattern, tuple):
+            pattern, units = self._layer_pattern
+
         layers = LayerCollection(palette=self._palette, background_color=self._background_color)
-        for layer_path in glob(self._layer_pattern):
+        for layer_path in glob(pattern):
             year = os.path.splitext(layer_path)[0][-4:]
-            layer = Layer(layer_path, year)
+            layer = Layer(layer_path, year, units=units)
             layers.append(layer)
 
-        if not layers:
+        if layers.empty:
             raise IOError(f"No spatial output found for pattern: {self._layer_pattern}")
 
         return layers
