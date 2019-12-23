@@ -83,8 +83,8 @@ class CompositeIndicator(Indicator):
        
     def _find_layers(self, pattern):
         units = Units.TcPerHa
-        if isinstance(self._layer_pattern, tuple):
-            pattern, units = self._layer_pattern
+        if isinstance(pattern, tuple):
+            pattern, units = pattern
 
         layers = LayerCollection(palette=self._palette, background_color=self._background_color)
         for layer_path in glob(pattern):
