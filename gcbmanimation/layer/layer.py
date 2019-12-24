@@ -133,7 +133,7 @@ class Layer:
 
         Returns a copy of this layer in the new units as a new Layer object.
         '''
-        if self._units == units:
+        if self._units == units or self._units == Units.Blank:
             return self
 
         output_path = TempFileManager.mktmp(suffix=".tif")
