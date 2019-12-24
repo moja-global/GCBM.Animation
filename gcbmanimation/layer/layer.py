@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import subprocess
+import psutil
 import numpy as np
 from enum import Enum
 from osgeo.scripts import gdal_calc
@@ -10,6 +11,9 @@ from geopy.distance import distance
 from gcbmanimation.util.tempfile import TempFileManager
 from gcbmanimation.animator.frame import Frame
 from gcbmanimation.layer.units import Units
+
+gdal_memory_limit = int(psutil.virtual_memory().available * 0.75)
+gdal.SetCacheMax(gdal_memory_limit)
 
 class BlendMode(Enum):
     
@@ -107,6 +111,11 @@ class Layer:
 
         return pixel_size_m
 
+    @property
+    def units(self):
+        '''Gets this layer's units.'''
+        return self._units
+
     def get_histogram(self, min_value, max_value, buckets):
         '''Computes a histogram for this layer.'''
         raster = gdal.Open(self._path)
@@ -158,7 +167,7 @@ class Layer:
                            creation_options=["BIGTIFF=YES", "COMPRESS=DEFLATE"],
                            overwrite=True, A=self.path)
 
-            return Layer(output_path, self._year, self._interpretation)
+            return Layer(output_path, self._year, self._interpretation, units)
 
         raster = gdal.Open(self._path)
         band = raster.GetRasterBand(1)
@@ -181,7 +190,7 @@ class Layer:
 
         self._save_as(raster_data, self.nodata_value, output_path)
         
-        return Layer(output_path, self._year, self._interpretation)
+        return Layer(output_path, self._year, self._interpretation, units)
 
     def reclassify(self, new_interpretation, nodata_value=0):
         '''
@@ -218,7 +227,7 @@ class Layer:
 
         output_path = TempFileManager.mktmp(suffix=".tif")
         self._save_as(raster_data, nodata_value, output_path)
-        reclassified_layer = Layer(output_path, self._year, new_interpretation)
+        reclassified_layer = Layer(output_path, self._year, new_interpretation, self._units)
 
         return reclassified_layer
 
@@ -234,7 +243,7 @@ class Layer:
         raster_data[raster_data != self.nodata_value] = flattened_value
         output_path = TempFileManager.mktmp(suffix=".tif")
         self._save_as(raster_data, self.nodata_value, output_path)
-        flattened_layer = Layer(output_path, self.year)
+        flattened_layer = Layer(output_path, self.year, units=Units.Blank)
 
         return flattened_layer
 
@@ -247,19 +256,22 @@ class Layer:
         '''
         output_path = TempFileManager.mktmp(suffix=".tif")
         gdal.Warp(output_path, self._path, dstSRS=projection, options=["BIGTIFF=YES", "COMPRESS=DEFLATE"])
-        reprojected_layer = Layer(output_path, self._year, self._interpretation)
+        reprojected_layer = Layer(output_path, self._year, self._interpretation, self._units)
 
         return reprojected_layer
 
     def blend(self, other, method=BlendMode.Add):
-        '''Blends this layer's values with another.'''
+        '''Blends another layer's values with this one's.'''
+        if self._units != other._units:
+            other = other.convert_units(self._units)
+
         calc = f"(A {method.value} B) * (A != {self.nodata_value}) * (B != {other.nodata_value})"
         output_path = TempFileManager.mktmp(suffix=".tif")
         gdal_calc.Calc(calc, output_path, self.nodata_value, quiet=True,
                        creation_options=["BIGTIFF=YES", "COMPRESS=DEFLATE"],
                        overwrite=True, A=self.path, B=other.path)
 
-        return Layer(output_path, self._year, self._interpretation)
+        return Layer(output_path, self._year, self._interpretation, self._units)
 
     def render(self, legend, bounding_box=None, transparent=True):
         '''

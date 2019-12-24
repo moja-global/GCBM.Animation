@@ -38,6 +38,10 @@ class SpatialGcbmResultsProvider(GcbmResultsProvider):
         start_year, end_year = self.simulation_years
         for year in range(start_year, end_year + 1):
             layer = self._find_year(layers, year)
+            if not layer:
+                data[year] = 0
+                continue
+
             if bounding_box:
                 layer = bounding_box.crop(layer)
 

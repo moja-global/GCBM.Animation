@@ -1,6 +1,7 @@
 import os
 import json
 from gcbmanimation.layer.layer import Layer
+from gcbmanimation.layer.units import Units
 from gcbmanimation.layer.layercollection import LayerCollection
 
 class DisturbanceLayerConfigurer:
@@ -58,7 +59,7 @@ class DisturbanceLayerConfigurer:
                     for raster_value, attr in layer_attribute_table.items()
                     if attr["year"] == year}
 
-                layer_collection.append(Layer(layer_tif, year, interpretation))
+                layer_collection.append(Layer(layer_tif, year, interpretation, Units.Blank))
 
         return layer_collection
 

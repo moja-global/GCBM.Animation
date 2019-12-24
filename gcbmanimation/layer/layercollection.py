@@ -66,13 +66,13 @@ class LayerCollection:
                 local_layer = local_layers[0]
             else:
                 placeholder = self._layers[0].flatten(0) if self._layers else other._layers[0].flatten(0)
-                local_layer = Layer(placeholder.path, year, placeholder.interpretation)
+                local_layer = Layer(placeholder.path, year, placeholder.interpretation, placeholder.units)
                     
             if other_layers:
                 other_layer = other_layers[0]
             else:
                 placeholder = local_layer.flatten(0)
-                other_layer = Layer(placeholder.path, year, placeholder.interpretation)
+                other_layer = Layer(placeholder.path, year, placeholder.interpretation, placeholder.units)
 
             blended_layer = local_layer.blend(other_layer, method)
             blended_collection.append(blended_layer)
@@ -146,7 +146,7 @@ class LayerCollection:
                   multithread=False,
                   creationOptions=["COMPRESS=DEFLATE", "BIGTIFF=YES"])
         
-        merged_layer = Layer(output_path, layers[0].year, layers[0].interpretation)
+        merged_layer = Layer(output_path, layers[0].year, layers[0].interpretation, layers[0].units)
 
         return merged_layer
 
