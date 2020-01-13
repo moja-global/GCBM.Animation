@@ -5,6 +5,7 @@ import os
 import subprocess
 import psutil
 import numpy as np
+from itertools import chain
 from enum import Enum
 from osgeo.scripts import gdal_calc
 from geopy.distance import distance
@@ -213,6 +214,11 @@ class Layer:
 
         uninterpreted_values = np.isin(raster_data, list(self._interpretation.keys()), invert=True)
         raster_data[uninterpreted_values] = nodata_value
+        
+        # Guard against conflicts between original and reclassified pixel values
+        # before updating anything.
+        collision_offset = max(chain(self._interpretation.keys(), new_interpretation.keys())) + 1
+        raster_data[raster_data != nodata_value] += collision_offset
 
         inverse_new_interpretation = {v: k for k, v in new_interpretation.items()}
         for original_pixel_value, interpreted_value in self._interpretation.items():
@@ -223,7 +229,7 @@ class Layer:
             if new_pixel_value == nodata_value:
                 logging.info(f"  No new pixel value for {interpreted_value}: setting to nodata ({nodata_value})")
 
-            raster_data[raster_data == original_pixel_value] = new_pixel_value
+            raster_data[raster_data == original_pixel_value + collision_offset] = new_pixel_value
 
         output_path = TempFileManager.mktmp(suffix=".tif")
         self._save_as(raster_data, nodata_value, output_path)

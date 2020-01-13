@@ -68,7 +68,7 @@ animator.render(bbox, 2010, 2020)
 
 # Test a composite indicator.
 composite_indicator = CompositeIndicator(
-    "Composite Age", {
+    "NBP", {
         r"C:\Projects\Standalone_Template\processed_output\spatial\NPP_*.tiff": BlendMode.Add,
         r"C:\Projects\Standalone_Template\processed_output\spatial\Ecosystem_Removals_*.tiff": BlendMode.Subtract
     })
