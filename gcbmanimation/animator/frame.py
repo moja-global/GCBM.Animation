@@ -112,10 +112,10 @@ class Frame:
                 new_width = int(new_height * aspect_ratio)
         else:
             new_height = max_height
-            new_width = int(new_height / aspect_ratio)
+            new_width = int(new_height * aspect_ratio)
             if new_width > max_width:
                 new_width = max_width
-                new_height = int(new_width * aspect_ratio)
+                new_height = int(new_width / aspect_ratio)
 
         out_path = TempFileManager.mktmp(suffix=".png")
         Image.open(self.path).resize((new_width, new_height), Image.ANTIALIAS).save(out_path)
