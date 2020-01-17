@@ -64,6 +64,9 @@
     <Compile Include="gcbmanimation\provider\__init__.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="gcbmanimation\util\config.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="gcbmanimation\util\utmzones.py">
       <SubType>Code</SubType>
     </Compile>

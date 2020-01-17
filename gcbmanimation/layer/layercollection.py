@@ -7,6 +7,7 @@ from gcbmanimation.layer.layer import Layer
 from gcbmanimation.layer.units import Units
 from gcbmanimation.layer.layer import BlendMode
 from gcbmanimation.animator.frame import Frame
+from gcbmanimation.util.config import gdal_creation_options
 from gcbmanimation.util.tempfile import TempFileManager
 
 class LayerCollection:
@@ -144,7 +145,7 @@ class LayerCollection:
         gdal.Warp(output_path,
                   [layer.path for layer in layers],
                   multithread=False,
-                  creationOptions=["COMPRESS=DEFLATE", "BIGTIFF=YES"])
+                  creationOptions=gdal_creation_options)
         
         merged_layer = Layer(output_path, layers[0].year, layers[0].interpretation, layers[0].units)
 

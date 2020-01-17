@@ -3,6 +3,7 @@ import gdal
 import numpy as np
 from osgeo.scripts import gdal_calc
 from gcbmanimation.layer.layer import Layer
+from gcbmanimation.util.config import gdal_creation_options
 from gcbmanimation.util.tempfile import TempFileManager
 
 class BoundingBox(Layer):
@@ -84,7 +85,7 @@ class BoundingBox(Layer):
         # Clip to bounding box geographical area.
         tmp_path = TempFileManager.mktmp(suffix=".tif")
         gdal.Translate(tmp_path, layer.path, projWin=self.min_geographic_bounds,
-                       projWinSRS="EPSG:4326", options=["BIGTIFF=YES", "COMPRESS=DEFLATE"])
+                       projWinSRS="EPSG:4326", creationOptions=gdal_creation_options)
         
         # Clip to bounding box nodata mask.
         calc = "A * (B != {0}) + ((B == {0}) * {1})".format(
@@ -92,7 +93,7 @@ class BoundingBox(Layer):
 
         output_path = TempFileManager.mktmp(suffix=".tif")
         gdal_calc.Calc(calc, output_path, layer.nodata_value, quiet=True,
-                       creation_options=["BIGTIFF=YES", "COMPRESS=DEFLATE"],
+                       creation_options=gdal_creation_options,
                        overwrite=True, A=tmp_path, B=self.path)
 
         cropped_layer = Layer(output_path, layer.year, layer.interpretation, layer.units)
@@ -105,7 +106,7 @@ class BoundingBox(Layer):
         self._path = self.reproject("EPSG:4326").path
         bbox_path = TempFileManager.mktmp(no_manual_cleanup=True, suffix=".tif")
         gdal.Translate(bbox_path, self._path, projWin=self.min_geographic_bounds,
-                       options=["BIGTIFF=YES", "COMPRESS=DEFLATE"])
+                       creationOptions=gdal_creation_options)
 
         self._path = bbox_path
         self._initialized = True

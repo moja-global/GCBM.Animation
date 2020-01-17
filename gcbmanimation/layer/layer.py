@@ -9,6 +9,7 @@ from itertools import chain
 from enum import Enum
 from osgeo.scripts import gdal_calc
 from geopy.distance import distance
+from gcbmanimation.util.config import gdal_creation_options
 from gcbmanimation.util.tempfile import TempFileManager
 from gcbmanimation.animator.frame import Frame
 from gcbmanimation.layer.units import Units
@@ -165,7 +166,7 @@ class Layer:
 
         if simple_conversion_calc:
             gdal_calc.Calc(simple_conversion_calc, output_path, self.nodata_value, quiet=True,
-                           creation_options=["BIGTIFF=YES", "COMPRESS=DEFLATE"],
+                           creation_options=gdal_creation_options,
                            overwrite=True, A=self.path)
 
             return Layer(output_path, self._year, self._interpretation, units)
@@ -261,7 +262,7 @@ class Layer:
         'projection' -- the new projection, i.e. NAD83.
         '''
         output_path = TempFileManager.mktmp(suffix=".tif")
-        gdal.Warp(output_path, self._path, dstSRS=projection, options=["BIGTIFF=YES", "COMPRESS=DEFLATE"])
+        gdal.Warp(output_path, self._path, dstSRS=projection, options=gdal_creation_options)
         reprojected_layer = Layer(output_path, self._year, self._interpretation, self._units)
 
         return reprojected_layer
@@ -274,7 +275,7 @@ class Layer:
         calc = f"(A {method.value} B) * (A != {self.nodata_value}) * (B != {other.nodata_value})"
         output_path = TempFileManager.mktmp(suffix=".tif")
         gdal_calc.Calc(calc, output_path, self.nodata_value, quiet=True,
-                       creation_options=["BIGTIFF=YES", "COMPRESS=DEFLATE"],
+                       creation_options=gdal_creation_options,
                        overwrite=True, A=self.path, B=other.path)
 
         return Layer(output_path, self._year, self._interpretation, self._units)
@@ -345,7 +346,7 @@ class Layer:
         driver = gdal.GetDriverByName("GTiff")
         original_raster = gdal.Open(self._path)
         new_raster = driver.CreateCopy(output_path, original_raster, strict=0,
-                                       options=["COMPRESS=DEFLATE", "BIGTIFF=YES"])
+                                       options=gdal_creation_options)
 
         band = new_raster.GetRasterBand(1)
         band.SetNoDataValue(nodata_value)
