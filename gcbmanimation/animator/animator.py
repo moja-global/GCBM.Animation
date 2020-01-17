@@ -72,7 +72,9 @@ class Animator:
             video_frames.append(video_frames[-1]) # Duplicate the last frame to display longer.
 
             os.makedirs(self._output_path, exist_ok=True)
-            imageio.mimsave(os.path.join(self._output_path, f"{indicator.title}.wmv"), video_frames, fps=1)
+            imageio.mimsave(os.path.join(self._output_path, f"{indicator.title}.wmv"), video_frames,
+                            fps=1, ffmpeg_log_level="fatal")
+
             TempFileManager.cleanup("*.tif")
 
     def _find_frame(self, frame_collection, year, default=None):
