@@ -1,5 +1,6 @@
 import os
 from glob import glob
+from gcbmanimation.layer.simplecolorizer import SimpleColorizer
 from gcbmanimation.layer.units import Units
 from gcbmanimation.layer.layer import Layer
 from gcbmanimation.layer.layercollection import LayerCollection
@@ -34,11 +35,13 @@ class Indicator:
         from matplotlib import cm; dir(cm)
     'background_color' -- the background (bounding box) color to use for the map
         frames.
+    'map_colorizer' -- a Colorizer to create the map legend with - defaults to
+        SimpleColorizer which bins values into 8 equal-sized buckets.
     '''
 
     def __init__(self, indicator, layer_pattern, results_provider, provider_filter=None,
                  title=None, graph_units=Units.Tc, map_units=Units.TcPerHa, palette="Greens",
-                 background_color=(255, 255, 255)):
+                 background_color=(255, 255, 255), map_colorizer=None):
         self._indicator = indicator
         self._layer_pattern = layer_pattern
         self._results_provider = results_provider
@@ -48,6 +51,7 @@ class Indicator:
         self._map_units = map_units or Units.TcPerHa
         self._palette = palette or "Greens"
         self._background_color = background_color
+        self._map_colorizer = map_colorizer or SimpleColorizer()
 
     @property
     def title(self):
@@ -104,7 +108,10 @@ class Indicator:
         if isinstance(self._layer_pattern, tuple):
             pattern, units = self._layer_pattern
 
-        layers = LayerCollection(palette=self._palette, background_color=self._background_color)
+        layers = LayerCollection(palette=self._palette,
+                                 background_color=self._background_color,
+                                 colorizer=self._map_colorizer)
+
         for layer_path in glob(pattern):
             year = os.path.splitext(layer_path)[0][-4:]
             layer = Layer(layer_path, year, units=units)

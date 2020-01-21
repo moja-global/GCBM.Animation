@@ -7,6 +7,7 @@ import psutil
 import numpy as np
 from itertools import chain
 from enum import Enum
+from string import ascii_uppercase
 from osgeo.scripts import gdal_calc
 from geopy.distance import distance
 from gcbmanimation.util.config import gdal_creation_options
@@ -262,21 +263,44 @@ class Layer:
         'projection' -- the new projection, i.e. NAD83.
         '''
         output_path = TempFileManager.mktmp(suffix=".tif")
-        gdal.Warp(output_path, self._path, dstSRS=projection, options=gdal_creation_options)
+        gdal.Warp(output_path, self._path, dstSRS=projection, creationOptions=gdal_creation_options)
         reprojected_layer = Layer(output_path, self._year, self._interpretation, self._units)
 
         return reprojected_layer
 
-    def blend(self, other, method=BlendMode.Add):
-        '''Blends another layer's values with this one's.'''
-        if self._units != other._units:
-            other = other.convert_units(self._units)
+    def blend(self, *layers):
+        '''
+        Blends this layer's values with one or more others.
 
-        calc = f"(A {method.value} B) * (A != {self.nodata_value}) * (B != {other.nodata_value})"
+        Arguments:
+        'layers' -- one or more other layers to blend paired with the blend mode, i.e.
+            some_layer.blend(layer_a, BlendMode.Add, layer_b, BlendMode.Subtract)
+        '''
+        blend_layers = {
+            ascii_uppercase[i]: (layer.convert_units(self._units), blend_mode)
+            for i, (layer, blend_mode) in enumerate(zip(layers[::2], layers[1::2]), 1)
+        }
+
+        calc = "(A "
+        calc += " ".join((
+            f"{blend_mode.value} {layer_key}"
+            for layer_key, (layer, blend_mode) in blend_layers.items()))
+
+        calc += f") * (A != {self.nodata_value}) * "
+        calc += " * ".join((
+            f"({layer_key} != {layer.nodata_value})"
+            for layer_key, (layer, blend_mode) in blend_layers.items()))
+
+        calc_args = {
+            layer_key: layer.path
+            for layer_key, (layer, blend_mode) in blend_layers.items()
+        }
+
+        logging.debug(f"Blending {calc_args} using: {calc}")
         output_path = TempFileManager.mktmp(suffix=".tif")
         gdal_calc.Calc(calc, output_path, self.nodata_value, quiet=True,
                        creation_options=gdal_creation_options,
-                       overwrite=True, A=self.path, B=other.path)
+                       overwrite=True, A=self.path, **calc_args)
 
         return Layer(output_path, self._year, self._interpretation, self._units)
 

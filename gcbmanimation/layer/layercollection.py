@@ -6,6 +6,7 @@ from collections import defaultdict
 from gcbmanimation.layer.layer import Layer
 from gcbmanimation.layer.units import Units
 from gcbmanimation.layer.layer import BlendMode
+from gcbmanimation.layer.simplecolorizer import SimpleColorizer
 from gcbmanimation.animator.frame import Frame
 from gcbmanimation.util.config import gdal_creation_options
 from gcbmanimation.util.tempfile import TempFileManager
@@ -28,12 +29,15 @@ class LayerCollection:
         hls, husl) or matplotlib colormap. To find matplotlib colormaps:
         from matplotlib import cm; dir(cm)
     'background_color' -- RGB tuple for the background color.
+    'colorizer' -- a Colorizer to create the legend with - defaults to
+        SimpleColorizer which bins values into 8 equal-sized buckets.
     '''
 
-    def __init__(self, layers=None, palette="hls", background_color=(224, 224, 224)):
+    def __init__(self, layers=None, palette="hls", background_color=(224, 224, 224), colorizer=None):
         self._layers = layers or []
         self._palette = palette
         self._background_color = background_color
+        self._colorizer = colorizer or SimpleColorizer()
 
     @property
     def empty(self):
@@ -53,30 +57,45 @@ class LayerCollection:
         '''Merges another LayerCollection's layers into this one.'''
         self._layers.extend(other._layers)
 
-    def blend(self, other, method=BlendMode.Add):
-        '''Blends the layers in this collection with the layers in another.'''
+    def blend(self, *collections):
+        '''
+        Blends this collection's layer values with one or more other collections.
+
+        Arguments:
+        'collections' -- one or more other LayerCollections to blend paired with
+            the blend mode, i.e.
+            some_layers.blend(layers_a, BlendMode.Add, layers_b, BlendMode.Subtract)
+        '''
+        blend_collections = list(zip(collections[::2], collections[1::2]))
+
         blended_collection = LayerCollection(palette=self._palette, background_color=self._background_color)
-        years = set(chain((layer.year for layer in self._layers), (layer.year for layer in other._layers)))
+        years = set(chain(
+            (layer.year for layer in self._layers),
+            *[(layer.year for layer in collection._layers) for collection, _ in blend_collections]))
+
         for year in years:
             local_layers = list(filter(lambda layer: layer.year == year, self._layers))
-            other_layers = list(filter(lambda layer: layer.year == year, other._layers))
-            if len(local_layers) > 1 or len(other_layers) > 1:
+            if len(local_layers) > 1:
                 raise RuntimeError("Cannot blend collections containing more than one layer per year.")
 
             if local_layers:
                 local_layer = local_layers[0]
             else:
-                placeholder = self._layers[0].flatten(0) if self._layers else other._layers[0].flatten(0)
+                placeholder = self._layers[0].flatten(0) if self._layers \
+                    else next(chain(*(collection._layers for collection, _ in blend_collections))).flatten(0)
+
                 local_layer = Layer(placeholder.path, year, placeholder.interpretation, placeholder.units)
                     
-            if other_layers:
-                other_layer = other_layers[0]
-            else:
-                placeholder = local_layer.flatten(0)
-                other_layer = Layer(placeholder.path, year, placeholder.interpretation, placeholder.units)
+            other_layers = []
+            for collection, blend_mode in blend_collections:
+                for layer in filter(lambda layer: layer.year == year, collection._layers):
+                    other_layers.extend([layer, blend_mode])
 
-            blended_layer = local_layer.blend(other_layer, method)
-            blended_collection.append(blended_layer)
+            if not other_layers:
+                blended_collection.append(local_layer)
+            else:
+                blended_layer = local_layer.blend(*other_layers)
+                blended_collection.append(blended_layer)
 
         return blended_collection
 
@@ -142,56 +161,23 @@ class LayerCollection:
 
     def _merge_layers(self, layers):
         output_path = TempFileManager.mktmp(suffix=".tif")
-        gdal.Warp(output_path,
-                  [layer.path for layer in layers],
-                  multithread=False,
-                  creationOptions=gdal_creation_options)
-        
+        gdal.Warp(output_path, [layer.path for layer in layers], creationOptions=gdal_creation_options)
         merged_layer = Layer(output_path, layers[0].year, layers[0].interpretation, layers[0].units)
 
         return merged_layer
 
     def _create_legend(self, layers, interpretation=None):
+        if not interpretation:
+            return self._colorizer.create_legend(layers, self._palette)
+
+        rgb_pct_colors = sns.color_palette(self._palette, len(interpretation))
+        rgb_colors = ((int(r_pct * 255), int(g_pct * 255), int(b_pct * 255))
+                        for r_pct, g_pct, b_pct in rgb_pct_colors)
+
         legend = {}
+        for pixel_value, interpreted_value in interpretation.items():
+            legend[pixel_value] = {
+                "label": interpreted_value,
+                "color": next(rgb_colors)}
 
-        if interpretation:
-            rgb_pct_colors = sns.color_palette(self._palette, len(interpretation))
-            rgb_colors = ((int(r_pct * 255), int(g_pct * 255), int(b_pct * 255))
-                          for r_pct, g_pct, b_pct in rgb_pct_colors)
-
-            for pixel_value, interpreted_value in interpretation.items():
-                legend[pixel_value] = {
-                    "label": interpreted_value,
-                    "color": next(rgb_colors)}
-        else:
-            bins = 8
-            min_value = min((layer.min_max[0] for layer in layers)) - 0.5
-            max_value = max((layer.min_max[1] for layer in layers)) + 0.5
-            bin_size = (max_value - min_value) / bins
-            
-            rgb_pct_colors = sns.color_palette(self._palette, bins)
-            rgb_colors = ((int(r_pct * 255), int(g_pct * 255), int(b_pct * 255))
-                          for r_pct, g_pct, b_pct in rgb_pct_colors)
-
-            for i in range(bins):
-                if i == 0:
-                    value = min_value + bin_size
-                    legend[value] = {
-                        "label": f"<= {self._format_value(value)}",
-                        "color": next(rgb_colors)}
-                elif i + 1 == bins:
-                    value = max_value - bin_size
-                    legend[value] = {
-                        "label": f"> {self._format_value(value)}",
-                        "color": next(rgb_colors)}
-                else:
-                    range_min = min_value + i * bin_size
-                    range_max = min_value + (i + 1) * bin_size
-                    legend[(range_min, range_max)] = {
-                        "label": f"{self._format_value(range_min)} to {self._format_value(range_max)}",
-                        "color": next(rgb_colors)}
-       
         return legend
-
-    def _format_value(self, value):
-        return f"{value:.2f}" if isinstance(value, float) else f"{value}"

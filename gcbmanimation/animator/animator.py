@@ -23,7 +23,7 @@ class Animator:
         self._indicators = indicators
         self._output_path = output_path
 
-    def render(self, bounding_box=None, start_year=None, end_year=None):
+    def render(self, bounding_box=None, start_year=None, end_year=None, fps=1):
         '''
         Renders a set of animations, one for each Indicator in this animator.
 
@@ -35,6 +35,7 @@ class Animator:
             from the indicator.
         'end_year' -- the year to render to - if not provided, will be detected
             from the indicator.
+        'fps' -- the framerate to use for the output animation - default 1.
         '''
         layout = QuadrantLayout((50, 60), (50, 60), (50, 40), (50, 40))
         disturbance_frames = None
@@ -73,7 +74,7 @@ class Animator:
 
             os.makedirs(self._output_path, exist_ok=True)
             imageio.mimsave(os.path.join(self._output_path, f"{indicator.title}.wmv"), video_frames,
-                            fps=1, ffmpeg_log_level="fatal")
+                            fps=fps, ffmpeg_log_level="fatal")
 
             TempFileManager.cleanup("*.tif")
 

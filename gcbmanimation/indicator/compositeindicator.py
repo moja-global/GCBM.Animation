@@ -75,10 +75,11 @@ class CompositeIndicator(Indicator):
             self._composite_layers = LayerCollection(
                 palette=self._palette, background_color=self._background_color)
 
+            layer_collections = []
             for pattern, blend_mode in self._patterns.items():
-                layers = self._find_layers(pattern)
-                self._composite_layers = self._composite_layers.blend(layers, blend_mode)
+                layer_collections.extend([self._find_layers(pattern), blend_mode])
 
+            self._composite_layers = self._composite_layers.blend(*layer_collections)
             self._results_provider = SpatialGcbmResultsProvider(layers=self._composite_layers.layers)
        
     def _find_layers(self, pattern):
