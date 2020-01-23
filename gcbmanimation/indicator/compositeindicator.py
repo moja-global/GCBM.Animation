@@ -40,7 +40,7 @@ class CompositeIndicator(Indicator):
         self._patterns = patterns
         self._composite_layers = None
 
-    def render_map_frames(self, bounding_box=None):
+    def render_map_frames(self, bounding_box=None, start_year=None, end_year=None):
         '''
         Renders the indicator's spatial output into colorized Frame objects.
 
@@ -52,11 +52,12 @@ class CompositeIndicator(Indicator):
         legend in dictionary format describing the colors.
         '''
         self._init()
-        start_year, end_year = self._results_provider.simulation_years
+        if not start_year or not end_year:
+            start_year, end_year = self._results_provider.simulation_years
         
         return self._composite_layers.render(bounding_box, start_year, end_year, self._map_units)
 
-    def render_graph_frames(self, **kwargs):
+    def render_graph_frames(self, start_year=None, end_year=None, **kwargs):
         '''
         Renders the indicator's non-spatial output into a graph.
 
@@ -68,7 +69,7 @@ class CompositeIndicator(Indicator):
         self._init()
         plot = BasicResultsPlot(self._indicator, self._results_provider, self._graph_units)
         
-        return plot.render(**kwargs)
+        return plot.render(start_year=start_year, end_year=end_year, **kwargs)
 
     def _init(self):
         if not self._composite_layers:

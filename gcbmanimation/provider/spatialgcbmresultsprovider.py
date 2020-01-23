@@ -30,12 +30,14 @@ class SpatialGcbmResultsProvider(GcbmResultsProvider):
         layers = self._layers or self._find_layers()
         return min((l.year for l in layers)), max((l.year for l in layers))
 
-    def get_annual_result(self, units=Units.Tc, bounding_box=None, **kwargs):
+    def get_annual_result(self, start_year=None, end_year=None, units=Units.Tc, bounding_box=None, **kwargs):
         '''See GcbmResultsProvider.get_annual_result.'''
         layers = self._layers or self._find_layers()
 
+        if not start_year or not end_year:
+            start_year, end_year = self.simulation_years
+
         data = OrderedDict()
-        start_year, end_year = self.simulation_years
         for year in range(start_year, end_year + 1):
             layer = self._find_year(layers, year)
             if not layer:

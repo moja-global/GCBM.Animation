@@ -23,7 +23,7 @@ class Animator:
         self._indicators = indicators
         self._output_path = output_path
 
-    def render(self, bounding_box=None, start_year=None, end_year=None, fps=1):
+    def render(self, bounding_box=None, start_year=None, end_year=None, fps=1, include_single_views=False):
         '''
         Renders a set of animations, one for each Indicator in this animator.
 
@@ -36,23 +36,36 @@ class Animator:
         'end_year' -- the year to render to - if not provided, will be detected
             from the indicator.
         'fps' -- the framerate to use for the output animation - default 1.
+        'include_single_views' -- include animations for each result view (graph,
+            map, disturbances) separately in addition to the standard 4-quadrant
+            layout.
         '''
+        os.makedirs(self._output_path, exist_ok=True)
+        if not start_year or not end_year:
+            start_year, end_year = self._indicators[0].simulation_years
+
         layout = QuadrantLayout((50, 60), (50, 60), (50, 40), (50, 40))
         disturbance_frames = None
         disturbance_legend = None
         for indicator in self._indicators:
-            graph_frames = indicator.render_graph_frames(bounding_box=bounding_box)
-            indicator_frames, indicator_legend = indicator.render_map_frames(bounding_box)
+            graph_frames = indicator.render_graph_frames(
+                bounding_box=bounding_box, start_year=start_year, end_year=end_year)
 
-            if not start_year or not end_year:
-                start_year = min((frame.year for frame in graph_frames))
-                end_year = max((frame.year for frame in graph_frames))
+            indicator_legend_title = f"{indicator.indicator} ({indicator.map_units.value[2]})"
+            indicator_frames, indicator_legend = indicator.render_map_frames(
+                bounding_box, start_year, end_year)
 
             if not disturbance_frames:
                 disturbance_frames, disturbance_legend = self._disturbances.render(
                     bounding_box, start_year, end_year)
 
-            indicator_legend_title = f"{indicator.indicator} ({indicator.map_units.value[1]})"
+            if include_single_views:
+                self._render_single_view(f"{indicator.title} (graph view)", graph_frames,
+                                         start_year, end_year, scalebar=False)
+
+                self._render_single_view(f"{indicator.title} (map view)", indicator_frames,
+                                         start_year, end_year, indicator_legend, indicator_legend_title)
+
             legend_frame = Legend({
                 "Disturbances": disturbance_legend,
                 indicator_legend_title: indicator_legend
@@ -69,14 +82,38 @@ class Animator:
                     "Disturbances", indicator_legend_title, indicator.indicator,
                     title=title, dimensions=(3840, 2160)))
 
-            video_frames = [imageio.imread(frame.path) for frame in animation_frames]
-            video_frames.append(video_frames[-1]) # Duplicate the last frame to display longer.
+            self._create_animation(indicator.title, animation_frames)
 
-            os.makedirs(self._output_path, exist_ok=True)
-            imageio.mimsave(os.path.join(self._output_path, f"{indicator.title}.wmv"), video_frames,
-                            fps=fps, ffmpeg_log_level="fatal")
+        if include_single_views:
+            self._render_single_view("Disturbances", disturbance_frames, start_year, end_year,
+                                     disturbance_legend, "Disturbances")
 
-            TempFileManager.cleanup("*.tif")
+    def _render_single_view(self, title, frames, start_year, end_year,
+                            legend=None, legend_title=None, scalebar=True):
+
+        quadrant_sizes = ((70, 100), (30, 100), (0, 0), (0, 0)) if legend else \
+            ((100, 100), (0, 0), (0, 0), (0, 0))
+
+        layout = QuadrantLayout(*quadrant_sizes, q1_scalebar=scalebar, q2_scalebar=False)
+        legend_frame = Legend({legend_title: legend}).render() if legend else None
+
+        animation_frames = []
+        for year in range(start_year, end_year + 1):
+            view_frame = self._find_frame(frames, year)
+            frame_title = f"{title}, Year: {year}"
+            animation_frames.append(layout.render(
+                view_frame, legend_frame, None, None,
+                title=frame_title, dimensions=(3840, 2160)))
+
+        self._create_animation(title, animation_frames)
+
+    def _create_animation(self, title, frames, fps=1):
+        video_frames = [imageio.imread(frame.path) for frame in frames]
+        video_frames.append(video_frames[-1]) # Duplicate the last frame to display longer.
+        imageio.mimsave(os.path.join(self._output_path, f"{title}.wmv"), video_frames,
+                        fps=fps, ffmpeg_log_level="fatal")
+
+        TempFileManager.cleanup("*.tif")
 
     def _find_frame(self, frame_collection, year, default=None):
         return next(filter(lambda frame: frame.year == year, frame_collection), None)

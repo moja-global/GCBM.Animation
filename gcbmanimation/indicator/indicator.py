@@ -72,8 +72,13 @@ class Indicator:
     def graph_units(self):
         '''Gets the Units for the graphed/non-spatial output.'''
         return self._graph_units
+
+    @property
+    def simulation_years(self):
+        '''Gets the years present in the simulation.'''
+        return self._results_provider.simulation_years
     
-    def render_map_frames(self, bounding_box=None):
+    def render_map_frames(self, bounding_box=None, start_year=None, end_year=None):
         '''
         Renders the indicator's spatial output into colorized Frame objects.
 
@@ -84,12 +89,13 @@ class Indicator:
         Returns a list of colorized Frames, one for each year of output, and a
         legend in dictionary format describing the colors.
         '''
-        start_year, end_year = self._results_provider.simulation_years
         layers = self._find_layers()
+        if not start_year or not end_year:
+            start_year, end_year = self._results_provider.simulation_years
         
         return layers.render(bounding_box, start_year, end_year, self._map_units)
 
-    def render_graph_frames(self, **kwargs):
+    def render_graph_frames(self, start_year=None, end_year=None, **kwargs):
         '''
         Renders the indicator's non-spatial output into a graph.
 
@@ -100,7 +106,7 @@ class Indicator:
         '''
         plot = BasicResultsPlot(self._indicator, self._results_provider, self._graph_units)
         
-        return plot.render(**self._provider_filter, **kwargs)
+        return plot.render(start_year=start_year, end_year=end_year, **self._provider_filter, **kwargs)
        
     def _find_layers(self):
         pattern = self._layer_pattern

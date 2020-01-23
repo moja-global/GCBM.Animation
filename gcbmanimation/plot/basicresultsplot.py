@@ -14,7 +14,7 @@ class BasicResultsPlot(ResultsPlot):
         self._provider = provider
         self._units = units
 
-    def render(self, **kwargs):
+    def render(self, start_year=None, end_year=None, **kwargs):
         '''
         Renders the configured plot into a graph.
 
@@ -23,14 +23,14 @@ class BasicResultsPlot(ResultsPlot):
 
         Returns a list of Frames, one for each year of output.
         '''
-        indicator_data = self._provider.get_annual_result(self._units, **kwargs)
+        indicator_data = self._provider.get_annual_result(start_year, end_year, self._units, **kwargs)
         years = list(indicator_data.keys())
         values = list(indicator_data.values())
 
         frames = []
         for i, year in enumerate(years):
             with self._figure(figsize=(10, 5)) as fig:
-                y_label = f"{self._title} ({self._units.name})"
+                y_label = f"{self._title} ({self._units.value[2]})"
                 plt.xlabel("Years", fontweight="bold", fontsize=14)
                 plt.ylabel(y_label, fontweight="bold", fontsize=14)
                 plt.axhline(0, color="darkgray")

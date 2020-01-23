@@ -7,6 +7,7 @@ from gcbmanimation.layer.layercollection import LayerCollection
 from gcbmanimation.layer.layer import Layer
 from gcbmanimation.layer.layer import BlendMode
 from gcbmanimation.layer.boundingbox import BoundingBox
+from gcbmanimation.layer.quantilecolorizer import QuantileColorizer
 from gcbmanimation.util.disturbancelayerconfigurer import DisturbanceLayerConfigurer
 from gcbmanimation.provider.sqlitegcbmresultsprovider import SqliteGcbmResultsProvider
 from gcbmanimation.provider.spatialgcbmresultsprovider import SpatialGcbmResultsProvider
@@ -18,10 +19,10 @@ from gcbmanimation.animator.animator import Animator
 from gcbmanimation.util.tempfile import TempFileManager
 from gcbmanimation.util.utmzones import find_best_projection
 
-logging.basicConfig(stream=sys.stdout)
+logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
 # Test a plain old LayerCollection - bounding box is the first layer found.
-layers = LayerCollection(palette="Reds")
+layers = LayerCollection(palette="Reds", colorizer=QuantileColorizer())
 bbox = None
 for layer_path in glob(r"C:\Projects\Standalone_Template\processed_output\spatial\NPP*.tiff"):
     year = os.path.splitext(layer_path)[0][-4:]
@@ -64,7 +65,7 @@ shutil.copyfile(legend_frame.path, rf"c:\tmp\legend.png")
 
 # Test animator.
 animator = Animator(disturbance_layers, [indicator], r"c:\tmp")
-animator.render(bbox, 2010, 2020)
+animator.render(bbox, 2010, 2020, include_single_views=True)
 
 # Test a composite indicator.
 composite_indicator = CompositeIndicator(

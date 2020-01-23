@@ -33,11 +33,14 @@ class SqliteGcbmResultsProvider(GcbmResultsProvider):
 
         return years
 
-    def get_annual_result(self, units=Units.Tc, indicator=None, **kwargs):
+    def get_annual_result(self, start_year=None, end_year=None, units=Units.Tc, indicator=None, **kwargs):
         '''See GcbmResultsProvider.get_annual_result.'''
         conn = sqlite3.connect(self._path)
         table, value_col = self._find_indicator_table(indicator)
-        units_tc, _ = units.value
+        _, units_tc, _ = units.value
+        if not start_year or not end_year:
+            start_year, end_year = self.simulation_years
+
         db_result = conn.execute(
             f"""
             SELECT years.year, COALESCE(SUM(i.{value_col}), 0) / {units_tc} AS value
@@ -45,6 +48,7 @@ class SqliteGcbmResultsProvider(GcbmResultsProvider):
             LEFT JOIN {table} i
                 ON years.year = i.year
             WHERE i.indicator = '{indicator}'
+                AND (years.year BETWEEN {start_year} AND {end_year})
             GROUP BY years.year
             ORDER BY years.year
             """).fetchall()

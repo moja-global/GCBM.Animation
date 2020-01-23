@@ -10,18 +10,20 @@ class QuantileColorizer(Colorizer):
     maps than SimpleColorizer.
     '''
 
+    def __init__(self, bins=8):
+        self._bins = bins
+
     def create_legend(self, layers, palette="hls"):
         all_layer_data = np.empty(shape=(0, 0))
         for layer in layers:
             all_layer_data = np.append(all_layer_data, self._load_layer_data(layer))
 
-        quantiles = Quantiles(all_layer_data, k=8)
+        quantiles = Quantiles(all_layer_data, k=self._bins)
         bins = quantiles.bins
-        num_bins = len(bins)
 
-        rgb_pct_colors = sns.color_palette(palette, num_bins)
+        rgb_pct_colors = sns.color_palette(palette, self._bins)
         rgb_colors = ((int(r_pct * 255), int(g_pct * 255), int(b_pct * 255))
-                        for r_pct, g_pct, b_pct in rgb_pct_colors)
+                      for r_pct, g_pct, b_pct in rgb_pct_colors)
 
         legend = {}
         for i, upper_bound in enumerate(bins):

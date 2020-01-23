@@ -136,18 +136,19 @@ class Layer:
 
         Returns a copy of this layer in the new units as a new Layer object.
         '''
-        if self._units == units or self._units == Units.Blank:
+        if self._units == Units.Blank:
+            return self
+
+        current_per_ha, current_units_tc, current_units_name = self._units.value
+        new_per_ha, new_units_tc, new_units_name = units.value
+        unit_conversion = current_units_tc / new_units_tc
+
+        if current_per_ha == new_per_ha and unit_conversion == 1:
+            self._units = units
             return self
 
         output_path = TempFileManager.mktmp(suffix=".tif")
         one_hectare = 100 ** 2
-
-        current_units_tc, current_units_name = self._units.value
-        new_units_tc, new_units_name = units.value
-        unit_conversion = current_units_tc / new_units_tc
-
-        current_per_ha = "/ha/" in current_units_name
-        new_per_ha = "/ha/" in new_units_name
 
         simple_conversion_calc = None
         if current_per_ha == new_per_ha:
