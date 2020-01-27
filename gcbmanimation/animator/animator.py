@@ -84,14 +84,14 @@ class Animator:
                     "Disturbances", indicator_legend_title, indicator.indicator,
                     title=title, dimensions=(3840, 2160)))
 
-            self._create_animation(indicator.title, animation_frames)
+            self._create_animation(indicator.title, animation_frames, fps)
 
         if include_single_views:
             self._render_single_view("Disturbances", disturbance_frames, start_year, end_year,
-                                     disturbance_legend, "Disturbances")
+                                     disturbance_legend, "Disturbances", fps=fps)
 
     def _render_single_view(self, title, frames, start_year, end_year,
-                            legend=None, legend_title=None, scalebar=True):
+                            legend=None, legend_title=None, scalebar=True, fps=1):
 
         quadrant_sizes = ((70, 100), (30, 100), (0, 0), (0, 0)) if legend else \
             ((100, 100), (0, 0), (0, 0), (0, 0))
@@ -107,7 +107,7 @@ class Animator:
                 view_frame, legend_frame, None, None,
                 title=frame_title, dimensions=(3840, 2160)))
 
-        self._create_animation(title, animation_frames)
+        self._create_animation(title, animation_frames, fps)
 
     def _create_animation(self, title, frames, fps=1):
         video_frames = [imageio.imread(frame.path) for frame in frames]
