@@ -76,8 +76,8 @@ class LayerCollection:
             if local_layers:
                 local_layer = local_layers[0]
             else:
-                placeholder = self._layers[0].flatten(0) if self._layers \
-                    else next(chain(*(collection._layers for collection, _ in blend_collections))).flatten(0)
+                placeholder = self._layers[0].flatten(0, True) if self._layers \
+                    else next(chain(*(collection._layers for collection, _ in blend_collections))).flatten(0, True)
 
                 local_layer = Layer(placeholder.path, year, placeholder.interpretation, placeholder.units)
             

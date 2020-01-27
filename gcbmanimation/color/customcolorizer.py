@@ -3,7 +3,15 @@ from gcbmanimation.color.colorizer import Colorizer
 
 class CustomColorizer(Colorizer):
     '''
-    Colorizes a set of layers based on a user-provided color scheme.
+    Colorizes a set of layers based on a user-provided color scheme. Accepts the
+    standard Colorizer constructor arguments plus some CustomColorizer-specific
+    settings.
+
+    Arguments:
+    'custom_colors' -- a dictionary of tuples of interpreted value to the name of
+        a color palette to group the interpreted values by.
+    'value_colorizer' -- optional alternative colorizer to use for creating legend
+        for layers with no interpretation; if not provided, uses the default method.
     '''
 
     def __init__(self, custom_colors, value_colorizer=None, **kwargs):

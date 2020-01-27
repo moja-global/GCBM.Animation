@@ -237,9 +237,15 @@ class Layer:
 
         return reclassified_layer
 
-    def flatten(self, flattened_value=1):
+    def flatten(self, flattened_value=1, preserve_units=False):
         '''
         Flattens a copy of this layer: all non-nodata pixels become the target value.
+
+        Arguments:
+        'flattened_value' -- the value to set all data pixels to.
+        'preserve_units' -- preserve the units (Units.TcPerHa, etc.) of this layer in
+            the flattened copy - otherwise set to Units.Blank.
+
         Returns a new flattened Layer object.
         '''
         logging.info(f"Flattening {self._path}")
@@ -249,7 +255,7 @@ class Layer:
         raster_data[raster_data != self.nodata_value] = flattened_value
         output_path = TempFileManager.mktmp(suffix=".tif")
         self._save_as(raster_data, self.nodata_value, output_path)
-        flattened_layer = Layer(output_path, self.year, units=Units.Blank)
+        flattened_layer = Layer(output_path, self.year, units=self._units if preserve_units else Units.Blank)
 
         return flattened_layer
 
