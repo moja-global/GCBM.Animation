@@ -24,18 +24,17 @@ class CompositeIndicator(Indicator):
         be converted to these units.
     'map_units' -- a Units enum value for the map units - spatial output values
         will be converted to these units.
-    'palette' -- the color palette to use for the rendered map frames - can be the
-        name of any seaborn palette (deep, muted, bright, pastel, dark, colorblind,
-        hls, husl) or matplotlib colormap. To find matplotlib colormaps:
-        from matplotlib import cm; dir(cm)
     'background_color' -- the background (bounding box) color to use for the map
         frames.
+    'colorizer' -- a Colorizer to create the map legend with - defaults to
+        simple Colorizer which bins values into equal-sized buckets.
     '''
 
     def __init__(self, indicator, patterns, title=None, graph_units=Units.Tc,
-                 map_units=Units.TcPerHa, palette="Greens", background_color=(255, 255, 255)):
+                 map_units=Units.TcPerHa, background_color=(255, 255, 255), colorizer=None):
+
         super().__init__(indicator, None, None, None, title, graph_units, map_units,
-                         palette, background_color)
+                         background_color, colorizer)
 
         self._patterns = patterns
         self._composite_layers = None
@@ -51,7 +50,7 @@ class CompositeIndicator(Indicator):
         Returns a list of colorized Frames, one for each year of output, and a
         legend in dictionary format describing the colors.
         '''
-        self._init()
+        self._init(bounding_box)
         if not start_year or not end_year:
             start_year, end_year = self._results_provider.simulation_years
         
@@ -66,32 +65,35 @@ class CompositeIndicator(Indicator):
 
         Returns a list of Frames, one for each year of output.
         '''
-        self._init()
+        self._init(**kwargs)
         plot = BasicResultsPlot(self._indicator, self._results_provider, self._graph_units)
         
         return plot.render(start_year=start_year, end_year=end_year, **kwargs)
 
-    def _init(self):
+    def _init(self, bounding_box=None, **kwargs):
         if not self._composite_layers:
             self._composite_layers = LayerCollection(
-                palette=self._palette, background_color=self._background_color)
+                background_color=self._background_color, colorizer=self._colorizer)
 
             layer_collections = []
             for pattern, blend_mode in self._patterns.items():
-                layer_collections.extend([self._find_layers(pattern), blend_mode])
+                layer_collections.extend([self._find_layers(pattern, bounding_box), blend_mode])
 
             self._composite_layers = self._composite_layers.blend(*layer_collections)
             self._results_provider = SpatialGcbmResultsProvider(layers=self._composite_layers.layers)
        
-    def _find_layers(self, pattern):
+    def _find_layers(self, pattern, bounding_box=None):
         units = Units.TcPerHa
         if isinstance(pattern, tuple):
             pattern, units = pattern
 
-        layers = LayerCollection(palette=self._palette, background_color=self._background_color)
+        layers = LayerCollection(background_color=self._background_color)
         for layer_path in glob(pattern):
             year = os.path.splitext(layer_path)[0][-4:]
             layer = Layer(layer_path, year, units=units)
+            if bounding_box:
+                layer = bounding_box.crop(layer)
+
             layers.append(layer)
 
         if not layers:

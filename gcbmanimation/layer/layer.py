@@ -3,7 +3,6 @@ import json
 import logging
 import os
 import subprocess
-import psutil
 import numpy as np
 from itertools import chain
 from enum import Enum
@@ -11,12 +10,10 @@ from string import ascii_uppercase
 from osgeo.scripts import gdal_calc
 from geopy.distance import distance
 from gcbmanimation.util.config import gdal_creation_options
+from gcbmanimation.util.config import gdal_memory_limit
 from gcbmanimation.util.tempfile import TempFileManager
 from gcbmanimation.animator.frame import Frame
 from gcbmanimation.layer.units import Units
-
-gdal_memory_limit = int(psutil.virtual_memory().available * 0.75)
-gdal.SetCacheMax(gdal_memory_limit)
 
 class BlendMode(Enum):
     
@@ -264,7 +261,10 @@ class Layer:
         'projection' -- the new projection, i.e. NAD83.
         '''
         output_path = TempFileManager.mktmp(suffix=".tif")
-        gdal.Warp(output_path, self._path, dstSRS=projection, creationOptions=gdal_creation_options)
+        gdal.SetCacheMax(gdal_memory_limit)
+        gdal.Warp(output_path, self._path, dstSRS=projection, creationOptions=gdal_creation_options,
+                  warpMemoryLimit=gdal_memory_limit)
+
         reprojected_layer = Layer(output_path, self._year, self._interpretation, self._units)
 
         return reprojected_layer

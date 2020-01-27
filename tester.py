@@ -7,7 +7,7 @@ from gcbmanimation.layer.layercollection import LayerCollection
 from gcbmanimation.layer.layer import Layer
 from gcbmanimation.layer.layer import BlendMode
 from gcbmanimation.layer.boundingbox import BoundingBox
-from gcbmanimation.layer.quantilecolorizer import QuantileColorizer
+from gcbmanimation.color.quantilecolorizer import QuantileColorizer
 from gcbmanimation.util.disturbancelayerconfigurer import DisturbanceLayerConfigurer
 from gcbmanimation.provider.sqlitegcbmresultsprovider import SqliteGcbmResultsProvider
 from gcbmanimation.provider.spatialgcbmresultsprovider import SpatialGcbmResultsProvider
@@ -22,7 +22,7 @@ from gcbmanimation.util.utmzones import find_best_projection
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
 # Test a plain old LayerCollection - bounding box is the first layer found.
-layers = LayerCollection(palette="Reds", colorizer=QuantileColorizer())
+layers = LayerCollection(colorizer=QuantileColorizer())
 bbox = None
 for layer_path in glob(r"C:\Projects\Standalone_Template\processed_output\spatial\NPP*.tiff"):
     year = os.path.splitext(layer_path)[0][-4:]
@@ -49,7 +49,7 @@ for rendered_layer in disturbance_frames:
 results_db = SqliteGcbmResultsProvider(r"C:\Projects\Standalone_Template\processed_output\compiled_gcbm_output.db")
 indicator = Indicator(
     "NPP", r"C:\Projects\Standalone_Template\processed_output\spatial\NPP*.tiff",
-    results_db, {"indicator": "NPP"}, graph_units=Units.Ktc, palette="Greens")
+    results_db, {"indicator": "NPP"}, graph_units=Units.Ktc, colorizer=QuantileColorizer(palette="Greens"))
 
 # Render using the bounding box from earlier and save the output for viewing.
 for frame in indicator.render_map_frames(bounding_box=bbox)[0]:
@@ -96,7 +96,7 @@ results_provider = SpatialGcbmResultsProvider(r"C:\Projects\Standalone_Template\
     
 indicator = Indicator(
     "NPP", r"C:\Projects\Standalone_Template\processed_output\spatial\NPP*.tiff", results_provider,
-    graph_units=Units.Tc, palette="Greens", title="NPP Cropped")
+    graph_units=Units.Tc, title="NPP Cropped")
 
 for frame in indicator.render_graph_frames(bounding_box=cropped_bbox):
     shutil.copyfile(frame.path, rf"c:\tmp\{indicator.title}_graph_{frame.year}.png")

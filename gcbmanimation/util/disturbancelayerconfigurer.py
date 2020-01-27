@@ -1,5 +1,6 @@
 import os
 import json
+from gcbmanimation.color.colorizer import Colorizer
 from gcbmanimation.layer.layer import Layer
 from gcbmanimation.layer.units import Units
 from gcbmanimation.layer.layercollection import LayerCollection
@@ -12,13 +13,11 @@ class DisturbanceLayerConfigurer:
     file.
 
     Arguments:
-    'palette' -- the color palette to use for the layer collection - can be the
-        name of any seaborn palette (deep, muted, bright, pastel, dark, colorblind,
-        hls, husl) or matplotlib colormap. To find matplotlib colormaps:
-        from matplotlib import cm; dir(cm)
+    'colorizer' -- a Colorizer to create the map legend with - defaults to
+        basic Colorizer which bins values into equal-sized buckets.
     '''
-    def __init__(self, palette="hls"):
-        self._palette = palette
+    def __init__(self, colorizer=None):
+        self._colorizer = colorizer or Colorizer()
 
     def configure(self, study_area_path):
         '''
@@ -36,7 +35,7 @@ class DisturbanceLayerConfigurer:
         disturbance_layers = [layer for layer in study_area["layers"]
                               if "disturbance" in layer.get("tags", [])]
         
-        layer_collection = LayerCollection(palette=self._palette)
+        layer_collection = LayerCollection(colorizer=self._colorizer)
         study_area_dir = os.path.dirname(study_area_path)
         for layer in disturbance_layers:
             layer_tif = os.path.join(study_area_dir, f"{layer['name']}_moja.tiff")

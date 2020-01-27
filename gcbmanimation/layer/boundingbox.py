@@ -84,29 +84,46 @@ class BoundingBox(Layer):
 
         # Clip to bounding box geographical area.
         tmp_path = TempFileManager.mktmp(suffix=".tif")
-        gdal.Translate(tmp_path, layer.path, projWin=self.min_geographic_bounds,
-                       projWinSRS="EPSG:4326", creationOptions=gdal_creation_options)
+        width, height = self.info["size"]
+        gdal.Warp(tmp_path, layer.path, dstSRS=self._get_srs(), creationOptions=gdal_creation_options,
+                  width=width, height=height,
+                  outputBounds=(self.info["cornerCoordinates"]["upperLeft"][0],
+                                self.info["cornerCoordinates"]["lowerRight"][1],
+                                self.info["cornerCoordinates"]["lowerRight"][0],
+                                self.info["cornerCoordinates"]["upperLeft"][1]))
         
         # Clip to bounding box nodata mask.
-        calc = "A * (B != {0}) + ((B == {0}) * {1})".format(
-            self.nodata_value, layer.nodata_value)
-
+        calc = "A * (B != {0}) + ((B == {0}) * {1})".format(self.nodata_value, layer.nodata_value)
         output_path = TempFileManager.mktmp(suffix=".tif")
         gdal_calc.Calc(calc, output_path, layer.nodata_value, quiet=True,
                        creation_options=gdal_creation_options,
                        overwrite=True, A=tmp_path, B=self.path)
 
         cropped_layer = Layer(output_path, layer.year, layer.interpretation, layer.units)
-        if self._projection:
-            cropped_layer = cropped_layer.reproject(self._projection)
 
         return cropped_layer
 
     def _init(self):
-        self._path = self.reproject("EPSG:4326").path
         bbox_path = TempFileManager.mktmp(no_manual_cleanup=True, suffix=".tif")
-        gdal.Translate(bbox_path, self._path, projWin=self.min_geographic_bounds,
-                       creationOptions=gdal_creation_options)
+        gdal.Warp(bbox_path, self._path,
+                  outputBounds=self.min_geographic_bounds,
+                  outputBoundsSRS=self._get_srs(),
+                  dstSRS=self._projection or self._get_srs(),
+                  creationOptions=gdal_creation_options)
 
-        self._path = bbox_path
+        # Warp again to fix projection issues - sometimes will be flipped vertically
+        # from the original.
+        final_bbox_path = TempFileManager.mktmp(no_manual_cleanup=True, suffix=".tif")
+        gdal.Warp(final_bbox_path, bbox_path)
+
+        self._path = final_bbox_path
+        self._min_geographic_bounds = None
+        self._min_pixel_bounds = None
+        self._info = None
         self._initialized = True
+
+    def _get_srs(self):
+        layer_data = gdal.Open(self._path)
+        srs = layer_data.GetProjection()
+
+        return srs

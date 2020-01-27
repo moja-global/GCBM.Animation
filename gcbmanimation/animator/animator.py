@@ -41,8 +41,6 @@ class Animator:
             layout.
         '''
         os.makedirs(self._output_path, exist_ok=True)
-        if not start_year or not end_year:
-            start_year, end_year = self._indicators[0].simulation_years
 
         layout = QuadrantLayout((50, 60), (50, 60), (50, 40), (50, 40))
         disturbance_frames = None
@@ -50,6 +48,10 @@ class Animator:
         for indicator in self._indicators:
             graph_frames = indicator.render_graph_frames(
                 bounding_box=bounding_box, start_year=start_year, end_year=end_year)
+
+            if not start_year or not end_year:
+                start_year = min((frame.year for frame in graph_frames))
+                end_year = max((frame.year for frame in graph_frames))
 
             indicator_legend_title = f"{indicator.indicator} ({indicator.map_units.value[2]})"
             indicator_frames, indicator_legend = indicator.render_map_frames(

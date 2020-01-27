@@ -23,6 +23,8 @@
   <ItemGroup>
     <Compile Include="gcbmanimation\animator\animator.py" />
     <Compile Include="gcbmanimation\animator\frame.py" />
+    <Compile Include="gcbmanimation\color\customcolorizer.py" />
+    <Compile Include="gcbmanimation\color\__init__.py" />
     <Compile Include="gcbmanimation\indicator\compositeindicator.py">
       <SubType>Code</SubType>
     </Compile>
@@ -42,6 +44,10 @@
     <Compile Include="gcbmanimation\indicator\__init__.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="gcbmanimation\color\colorizer.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="gcbmanimation\color\quantilecolorizer.py" />
     <Compile Include="gcbmanimation\layer\units.py">
       <SubType>Code</SubType>
     </Compile>
@@ -86,6 +92,7 @@
     <Folder Include="gcbmanimation\animator\" />
     <Folder Include="gcbmanimation\animator\layout\" />
     <Folder Include="gcbmanimation\indicator\" />
+    <Folder Include="gcbmanimation\color\" />
     <Folder Include="gcbmanimation\plot\" />
     <Folder Include="gcbmanimation\provider\" />
     <Folder Include="gcbmanimation\layer\" />

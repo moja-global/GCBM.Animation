@@ -1,6 +1,6 @@
 import os
 from glob import glob
-from gcbmanimation.layer.simplecolorizer import SimpleColorizer
+from gcbmanimation.color.colorizer import Colorizer
 from gcbmanimation.layer.units import Units
 from gcbmanimation.layer.layer import Layer
 from gcbmanimation.layer.layercollection import LayerCollection
@@ -29,19 +29,15 @@ class Indicator:
         be converted to these units.
     'map_units' -- a Units enum value for the map units - spatial output values
         will be converted to the target units if necessary.
-    'palette' -- the color palette to use for the rendered map frames - can be the
-        name of any seaborn palette (deep, muted, bright, pastel, dark, colorblind,
-        hls, husl) or matplotlib colormap. To find matplotlib colormaps:
-        from matplotlib import cm; dir(cm)
     'background_color' -- the background (bounding box) color to use for the map
         frames.
-    'map_colorizer' -- a Colorizer to create the map legend with - defaults to
-        SimpleColorizer which bins values into 8 equal-sized buckets.
+    'colorizer' -- a Colorizer to create the map legend with - defaults to
+        basic Colorizer which bins values into equal-sized buckets.
     '''
 
     def __init__(self, indicator, layer_pattern, results_provider, provider_filter=None,
-                 title=None, graph_units=Units.Tc, map_units=Units.TcPerHa, palette="Greens",
-                 background_color=(255, 255, 255), map_colorizer=None):
+                 title=None, graph_units=Units.Tc, map_units=Units.TcPerHa,
+                 background_color=(255, 255, 255), colorizer=None):
         self._indicator = indicator
         self._layer_pattern = layer_pattern
         self._results_provider = results_provider
@@ -49,9 +45,8 @@ class Indicator:
         self._title = title or indicator
         self._graph_units = graph_units or Units.Tc
         self._map_units = map_units or Units.TcPerHa
-        self._palette = palette or "Greens"
         self._background_color = background_color
-        self._map_colorizer = map_colorizer or SimpleColorizer()
+        self._colorizer = colorizer or Colorizer()
 
     @property
     def title(self):
@@ -114,10 +109,7 @@ class Indicator:
         if isinstance(self._layer_pattern, tuple):
             pattern, units = self._layer_pattern
 
-        layers = LayerCollection(palette=self._palette,
-                                 background_color=self._background_color,
-                                 colorizer=self._map_colorizer)
-
+        layers = LayerCollection(background_color=self._background_color, colorizer=self._colorizer)
         for layer_path in glob(pattern):
             year = os.path.splitext(layer_path)[0][-4:]
             layer = Layer(layer_path, year, units=units)

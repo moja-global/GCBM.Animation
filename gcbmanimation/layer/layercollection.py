@@ -1,14 +1,14 @@
 import os
 import gdal
-import seaborn as sns
 from itertools import chain
 from collections import defaultdict
 from gcbmanimation.layer.layer import Layer
 from gcbmanimation.layer.units import Units
 from gcbmanimation.layer.layer import BlendMode
-from gcbmanimation.layer.simplecolorizer import SimpleColorizer
+from gcbmanimation.color.colorizer import Colorizer
 from gcbmanimation.animator.frame import Frame
 from gcbmanimation.util.config import gdal_creation_options
+from gcbmanimation.util.config import gdal_memory_limit
 from gcbmanimation.util.tempfile import TempFileManager
 
 class LayerCollection:
@@ -24,20 +24,15 @@ class LayerCollection:
 
     Arguments:
     'layers' -- a list of Layer objects to include in the collection.
-    'palette' -- the color palette to use for the rendered frames - can be the
-        name of any seaborn palette (deep, muted, bright, pastel, dark, colorblind,
-        hls, husl) or matplotlib colormap. To find matplotlib colormaps:
-        from matplotlib import cm; dir(cm)
     'background_color' -- RGB tuple for the background color.
     'colorizer' -- a Colorizer to create the legend with - defaults to
-        SimpleColorizer which bins values into 8 equal-sized buckets.
+        basic Colorizer which bins values into 8 equal-sized buckets.
     '''
 
-    def __init__(self, layers=None, palette="hls", background_color=(224, 224, 224), colorizer=None):
+    def __init__(self, layers=None, background_color=(224, 224, 224), colorizer=None):
         self._layers = layers or []
-        self._palette = palette
         self._background_color = background_color
-        self._colorizer = colorizer or SimpleColorizer()
+        self._colorizer = colorizer or Colorizer()
 
     @property
     def empty(self):
@@ -67,8 +62,8 @@ class LayerCollection:
             some_layers.blend(layers_a, BlendMode.Add, layers_b, BlendMode.Subtract)
         '''
         blend_collections = list(zip(collections[::2], collections[1::2]))
+        blended_collection = LayerCollection(background_color=self._background_color, colorizer=self._colorizer)
 
-        blended_collection = LayerCollection(palette=self._palette, background_color=self._background_color)
         years = set(chain(
             (layer.year for layer in self._layers),
             *[(layer.year for layer in collection._layers) for collection, _ in blend_collections]))
@@ -85,7 +80,7 @@ class LayerCollection:
                     else next(chain(*(collection._layers for collection, _ in blend_collections))).flatten(0)
 
                 local_layer = Layer(placeholder.path, year, placeholder.interpretation, placeholder.units)
-                    
+            
             other_layers = []
             for collection, blend_mode in blend_collections:
                 for layer in filter(lambda layer: layer.year == year, collection._layers):
@@ -147,7 +142,7 @@ class LayerCollection:
             {1: {"color": self._background_color}}, bounding_box=bounding_box, transparent=False)
 
         working_layers = [self._merge_layers(layers) for layers in layers_by_year.values()]
-        legend = self._create_legend(working_layers, common_interpretation)
+        legend = self._colorizer.create_legend(working_layers)
         rendered_layers = [
             layer.render(legend).composite(background_frame, send_to_bottom=True)
             for layer in working_layers]
@@ -161,23 +156,10 @@ class LayerCollection:
 
     def _merge_layers(self, layers):
         output_path = TempFileManager.mktmp(suffix=".tif")
-        gdal.Warp(output_path, [layer.path for layer in layers], creationOptions=gdal_creation_options)
+        gdal.SetCacheMax(gdal_memory_limit)
+        gdal.Warp(output_path, [layer.path for layer in layers], creationOptions=gdal_creation_options,
+                  warpMemoryLimit=gdal_memory_limit)
+
         merged_layer = Layer(output_path, layers[0].year, layers[0].interpretation, layers[0].units)
 
         return merged_layer
-
-    def _create_legend(self, layers, interpretation=None):
-        if not interpretation:
-            return self._colorizer.create_legend(layers, self._palette)
-
-        rgb_pct_colors = sns.color_palette(self._palette, len(interpretation))
-        rgb_colors = ((int(r_pct * 255), int(g_pct * 255), int(b_pct * 255))
-                        for r_pct, g_pct, b_pct in rgb_pct_colors)
-
-        legend = {}
-        for pixel_value, interpreted_value in interpretation.items():
-            legend[pixel_value] = {
-                "label": interpreted_value,
-                "color": next(rgb_colors)}
-
-        return legend
