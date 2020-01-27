@@ -1,4 +1,5 @@
 import seaborn as sns
+from collections import OrderedDict
 from gcbmanimation.color.colorizer import Colorizer
 
 class CustomColorizer(Colorizer):
@@ -38,10 +39,16 @@ class CustomColorizer(Colorizer):
             for value in uncustomized_values:
                 color_map[value] = next(colors)
 
-        legend = {}
-        for pixel_value, interpreted_value in interpretation.items():
+        inverted_original_interpretation = {v: k for k, v in interpretation.items()}
+
+        legend = OrderedDict()
+        for interpreted_value, color in color_map.items():
+            pixel_value = inverted_original_interpretation.get(interpreted_value)
+            if not pixel_value:
+                continue
+
             legend[pixel_value] = {
                 "label": interpreted_value,
-                "color": color_map[interpreted_value]}
+                "color": color}
 
         return legend
