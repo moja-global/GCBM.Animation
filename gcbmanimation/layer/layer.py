@@ -207,7 +207,7 @@ class Layer:
         
         Returns a new reclassified Layer object.
         '''
-        logging.info(f"Reclassifying {self._path}")
+        logging.debug(f"Reclassifying {self._path}")
         raster = gdal.Open(self._path)
         band = raster.GetRasterBand(1)
         raster_data = band.ReadAsArray()
@@ -248,7 +248,7 @@ class Layer:
 
         Returns a new flattened Layer object.
         '''
-        logging.info(f"Flattening {self._path}")
+        logging.debug(f"Flattening {self._path}")
         raster = gdal.Open(self._path)
         band = raster.GetRasterBand(1)
         raster_data = band.ReadAsArray()

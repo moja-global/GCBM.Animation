@@ -1,5 +1,6 @@
 import os
 import imageio
+import logging
 from gcbmanimation.animator.layout.quadrantlayout import QuadrantLayout
 from gcbmanimation.animator.legend import Legend
 from gcbmanimation.util.tempfile import TempFileManager
@@ -46,6 +47,8 @@ class Animator:
         disturbance_frames = None
         disturbance_legend = None
         for indicator in self._indicators:
+            logging.info(f"Rendering animation: {indicator.title}")
+
             graph_frames = indicator.render_graph_frames(
                 bounding_box=bounding_box, start_year=start_year, end_year=end_year)
 

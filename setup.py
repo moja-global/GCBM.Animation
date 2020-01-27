@@ -23,6 +23,10 @@ setup(
     extras_require={},
     package_data={},
     data_files=[],
-    entry_points={},
+    entry_points={
+        "console_scripts": [
+            "gcbmanimation = gcbmanimation.scripts.animate:cli"
+        ]
+    },
     python_requires=">=3.7"
 )
