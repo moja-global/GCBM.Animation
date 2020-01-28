@@ -15,8 +15,8 @@ class CustomColorizer(Colorizer):
         for layers with no interpretation; if not provided, uses the default method.
     '''
 
-    def __init__(self, custom_colors, value_colorizer=None, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, custom_colors, value_colorizer=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self._value_colorizer = value_colorizer
         self._custom_colors = custom_colors
 

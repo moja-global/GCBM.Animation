@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="gcbmanimation",
-    version="0.1a",
+    version="1.0",
     description="GCBM Animator",
     long_description="GCBM Animator",
     url="",

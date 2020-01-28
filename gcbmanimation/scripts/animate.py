@@ -78,7 +78,9 @@ def cli():
             results_provider, {"indicator": indicator_config["database_indicator"]},
             indicator_config.get("title"),
             graph_units, map_units,
-            colorizer=QuantileColorizer(palette=indicator_config.get("palette"))))
+            colorizer=QuantileColorizer(
+                palette=indicator_config.get("palette"),
+                negative_palette=indicator_config.get("negative_palette"))))
 
     animator = Animator(disturbance_layers, indicators, args.output_path)
     animator.render(bounding_box)

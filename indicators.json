@@ -8,7 +8,8 @@
   {
     "database_indicator": "NBP",
     "file_pattern": "NBP*.tiff",
-    "palette": "BrBG"
+    "palette": "Greens",
+    "negative_palette": "Reds"
   },
   {
     "database_indicator": "NEP",
