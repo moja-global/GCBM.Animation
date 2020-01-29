@@ -114,7 +114,7 @@ class BoundingBox(Layer):
         # Warp again to fix projection issues - sometimes will be flipped vertically
         # from the original.
         final_bbox_path = TempFileManager.mktmp(no_manual_cleanup=True, suffix=".tif")
-        gdal.Warp(final_bbox_path, bbox_path)
+        gdal.Warp(final_bbox_path, bbox_path, creationOptions=gdal_creation_options)
 
         self._path = final_bbox_path
         self._min_geographic_bounds = None

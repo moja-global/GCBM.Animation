@@ -15,9 +15,11 @@ class DisturbanceLayerConfigurer:
     Arguments:
     'colorizer' -- a Colorizer to create the map legend with - defaults to
         basic Colorizer which bins values into equal-sized buckets.
+    'background_color' -- RGB tuple for the background color.
     '''
-    def __init__(self, colorizer=None):
+    def __init__(self, colorizer=None, background_color=(224, 224, 224)):
         self._colorizer = colorizer or Colorizer()
+        self._background_color = background_color
 
     def configure(self, study_area_path):
         '''
@@ -35,7 +37,9 @@ class DisturbanceLayerConfigurer:
         disturbance_layers = [layer for layer in study_area["layers"]
                               if "disturbance" in layer.get("tags", [])]
         
-        layer_collection = LayerCollection(colorizer=self._colorizer)
+        layer_collection = LayerCollection(colorizer=self._colorizer,
+                                           background_color=self._background_color)
+
         study_area_dir = os.path.dirname(study_area_path)
         for layer in disturbance_layers:
             layer_tif = os.path.join(study_area_dir, f"{layer['name']}_moja.tiff")
