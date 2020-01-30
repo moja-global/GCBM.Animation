@@ -70,13 +70,16 @@
     <Compile Include="gcbmanimation\provider\__init__.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="gcbmanimation\scripts\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="gcbmanimation\util\config.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="gcbmanimation\util\utmzones.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="gcbm_animation.py" />
+    <Compile Include="gcbmanimation\scripts\animate.py" />
     <Compile Include="gcbmanimation\layer\boundingbox.py" />
     <Compile Include="gcbmanimation\layer\layer.py" />
     <Compile Include="gcbmanimation\layer\layercollection.py" />
@@ -84,6 +87,9 @@
     <Compile Include="gcbmanimation\util\disturbancelayerconfigurer.py" />
     <Compile Include="gcbmanimation\util\tempfile.py" />
     <Compile Include="gcbmanimation\util\__init__.py" />
+    <Compile Include="gcbmanimation\__main__.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="setup.py" />
     <Compile Include="tester.py" />
   </ItemGroup>
@@ -96,6 +102,7 @@
     <Folder Include="gcbmanimation\plot\" />
     <Folder Include="gcbmanimation\provider\" />
     <Folder Include="gcbmanimation\layer\" />
+    <Folder Include="gcbmanimation\scripts\" />
     <Folder Include="gcbmanimation\util\" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
