@@ -155,11 +155,12 @@ class LayerCollection:
         return rendered_layers, legend
 
     def _merge_layers(self, layers):
+        if len(layers) == 1:
+            return layers[0]
+
         output_path = TempFileManager.mktmp(suffix=".tif")
         gdal.SetCacheMax(gdal_memory_limit)
-        gdal.Warp(output_path, [layer.path for layer in layers], creationOptions=gdal_creation_options,
-                  warpMemoryLimit=gdal_memory_limit)
-
+        gdal.Warp(output_path, [layer.path for layer in layers], creationOptions=gdal_creation_options)
         merged_layer = Layer(output_path, layers[0].year, layers[0].interpretation, layers[0].units)
 
         return merged_layer

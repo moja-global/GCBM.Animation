@@ -268,8 +268,7 @@ class Layer:
         '''
         output_path = TempFileManager.mktmp(suffix=".tif")
         gdal.SetCacheMax(gdal_memory_limit)
-        gdal.Warp(output_path, self._path, dstSRS=projection, creationOptions=gdal_creation_options,
-                  warpMemoryLimit=gdal_memory_limit)
+        gdal.Warp(output_path, self._path, dstSRS=projection, creationOptions=gdal_creation_options)
 
         reprojected_layer = Layer(output_path, self._year, self._interpretation, self._units)
 

@@ -4,6 +4,7 @@ import seaborn as sns
 from enum import Enum
 from pysal.esda.mapclassify import Quantiles
 from gcbmanimation.color.colorizer import Colorizer
+from gcbmanimation.util.config import gdal_memory_limit
 
 class Filter(Enum):
 
@@ -89,34 +90,27 @@ class QuantileColorizer(Colorizer):
         return legend
 
     def _get_quantile_dataset(self, layers, filter=None):
-        all_layer_data = None
-        sample_proportion = 1
-        while all_layer_data is None:
-            try:
-                all_layer_data = np.empty(shape=(0, 0))
-                for layer in layers:
-                    all_layer_data = np.append(
-                        all_layer_data, self._load_layer_data(layer, sample_proportion, filter))
-            except MemoryError:
-                all_layer_data = None
-                sample_proportion = sample_proportion / 2
+        # Cap the maximum amount of data to load to avoid running out of memory.
+        data_points_per_layer = gdal_memory_limit / (64 / 8) // len(layers)
+
+        all_layer_data = np.empty(shape=(0, 0))
+        for layer in layers:
+            layer_data = self._load_layer_data(layer, filter)
+            if layer_data.size > data_points_per_layer:
+                layer_data = np.random.choice(layer_data, data_points_per_layer)
+
+            all_layer_data = np.append(all_layer_data, layer_data)
 
         return all_layer_data
 
-    def _load_layer_data(self, layer, sample_proportion=1, filter=None):
+    def _load_layer_data(self, layer, filter=None):
         raster = gdal.Open(layer.path)
         raster_data = np.array(raster.GetRasterBand(1).ReadAsArray())
-        pixel_count = raster_data.shape[0] * raster_data.shape[1]
         raster_data[np.where(raster_data == layer.nodata_value)] = np.nan
-        raster_data = np.reshape(raster_data, pixel_count)
+        raster_data = raster_data.reshape(raster_data.size)
         raster_data = raster_data[np.logical_not(np.isnan(raster_data))]
+        raster_data = raster_data[np.where(raster_data <= 0)] if filter == Filter.Negative \
+                 else raster_data[np.where(raster_data  > 0)] if filter == Filter.Positive \
+                 else raster_data
 
-        if filter == Filter.Negative:
-            raster_data = raster_data[np.where(raster_data <= 0)]
-        elif filter == Filter.Positive:
-            raster_data = raster_data[np.where(raster_data > 0)]
-
-        if sample_proportion < 1:
-            raster_data = np.random.choice(raster_data, int(pixel_count * sample_proportion))
-        
         return raster_data
