@@ -4,6 +4,7 @@ import numpy as np
 from osgeo.scripts import gdal_calc
 from gcbmanimation.layer.layer import Layer
 from gcbmanimation.util.config import gdal_creation_options
+from gcbmanimation.util.config import gdal_memory_limit
 from gcbmanimation.util.tempfile import TempFileManager
 
 class BoundingBox(Layer):
@@ -85,6 +86,7 @@ class BoundingBox(Layer):
         # Clip to bounding box geographical area.
         tmp_path = TempFileManager.mktmp(suffix=".tif")
         width, height = self.info["size"]
+        gdal.SetCacheMax(gdal_memory_limit)
         gdal.Warp(tmp_path, layer.path, dstSRS=self._get_srs(), creationOptions=gdal_creation_options,
                   width=width, height=height,
                   outputBounds=(self.info["cornerCoordinates"]["upperLeft"][0],
@@ -105,6 +107,7 @@ class BoundingBox(Layer):
 
     def _init(self):
         bbox_path = TempFileManager.mktmp(no_manual_cleanup=True, suffix=".tif")
+        gdal.SetCacheMax(gdal_memory_limit)
         gdal.Warp(bbox_path, self._path,
                   outputBounds=self.min_geographic_bounds,
                   outputBoundsSRS=self._get_srs(),

@@ -1,5 +1,7 @@
 import os
+import logging
 from glob import glob
+from multiprocessing import Pool
 from gcbmanimation.indicator.indicator import Indicator
 from gcbmanimation.layer.units import Units
 from gcbmanimation.provider.spatialgcbmresultsprovider import SpatialGcbmResultsProvider
@@ -87,16 +89,22 @@ class CompositeIndicator(Indicator):
         if isinstance(pattern, tuple):
             pattern, units = pattern
 
-        layers = LayerCollection(background_color=self._background_color)
-        for layer_path in glob(pattern):
-            year = os.path.splitext(layer_path)[0][-4:]
-            layer = Layer(layer_path, year, units=units)
-            if bounding_box:
-                layer = bounding_box.crop(layer)
+        layers = []
+        with Pool() as pool:
+            tasks = []
+            for layer_path in glob(pattern):
+                year = os.path.splitext(layer_path)[0][-4:]
+                layer = Layer(layer_path, year, units=units)
+                if bounding_box:
+                    tasks.append(pool.apply_async(bounding_box.crop, (layer,)))
+                else:
+                    layers.append(layer)
 
-            layers.append(layer)
+            layers.extend((task.get() for task in tasks))
 
         if not layers:
-            raise IOError(f"No spatial output found for pattern: {pattern}")
+            logging.warning(f"No spatial output found for pattern: {pattern}")
 
-        return layers
+        layer_collection = LayerCollection(layers, self._background_color)
+
+        return layer_collection

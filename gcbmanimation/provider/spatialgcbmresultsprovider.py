@@ -1,6 +1,7 @@
 import os
 import sqlite3
 import gdal
+from multiprocessing import Pool
 from glob import glob
 from collections import OrderedDict
 from gcbmanimation.layer.layer import Layer
@@ -33,25 +34,29 @@ class SpatialGcbmResultsProvider(GcbmResultsProvider):
     def get_annual_result(self, start_year=None, end_year=None, units=Units.Tc, bounding_box=None, **kwargs):
         '''See GcbmResultsProvider.get_annual_result.'''
         layers = self._layers or self._find_layers()
-
         if not start_year or not end_year:
             start_year, end_year = self.simulation_years
 
-        data = OrderedDict()
-        for year in range(start_year, end_year + 1):
-            layer = self._find_year(layers, year)
-            if not layer:
-                data[year] = 0
-                continue
-
+        result_years = list(range(start_year, end_year + 1))
+        working_layers = [layer for layer in layers if layer.year in result_years]
+        with Pool() as pool:
             if bounding_box:
-                layer = bounding_box.crop(layer)
+                working_layers = pool.map(bounding_box.crop, working_layers)
 
-            layer = layer.convert_units(units)
-            value = self._sum_pixels(layer)
-            data[year] = value
+            tasks = [pool.apply_async(layer.convert_units, (units,)) for layer in working_layers]
+            working_layers = [task.get() for task in tasks]
 
-        return data
+            data = OrderedDict()
+            for year in result_years:
+                layer = self._find_year(working_layers, year)
+                if not layer:
+                    data[year] = 0
+                    continue
+
+                value = self._sum_pixels(layer)
+                data[year] = value
+
+            return data
 
     def _find_layers(self):
         pattern = self._pattern

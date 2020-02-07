@@ -136,6 +136,7 @@ class Layer:
         if self._units == Units.Blank:
             return self
 
+        gdal.SetCacheMax(gdal_memory_limit)
         current_per_ha, current_units_tc, current_units_name = self._units.value
         new_per_ha, new_units_tc, new_units_name = units.value
         unit_conversion = current_units_tc / new_units_tc
@@ -207,6 +208,7 @@ class Layer:
         
         Returns a new reclassified Layer object.
         '''
+        gdal.SetCacheMax(gdal_memory_limit)
         logging.debug(f"Reclassifying {self._path}")
         raster = gdal.Open(self._path)
         band = raster.GetRasterBand(1)
@@ -248,6 +250,7 @@ class Layer:
 
         Returns a new flattened Layer object.
         '''
+        gdal.SetCacheMax(gdal_memory_limit)
         logging.debug(f"Flattening {self._path}")
         raster = gdal.Open(self._path)
         band = raster.GetRasterBand(1)
@@ -304,6 +307,7 @@ class Layer:
 
         logging.debug(f"Blending {calc_args} using: {calc}")
         output_path = TempFileManager.mktmp(suffix=".tif")
+        gdal.SetCacheMax(gdal_memory_limit)
         gdal_calc.Calc(calc, output_path, self.nodata_value, quiet=True,
                        creation_options=gdal_creation_options,
                        overwrite=True, A=self.path, **calc_args)
@@ -373,6 +377,7 @@ class Layer:
         return Frame(self._year, rendered_layer_path, self.scale)
 
     def _save_as(self, data, nodata_value, output_path):
+        gdal.SetCacheMax(gdal_memory_limit)
         driver = gdal.GetDriverByName("GTiff")
         original_raster = gdal.Open(self._path)
         new_raster = driver.CreateCopy(output_path, original_raster, strict=0,

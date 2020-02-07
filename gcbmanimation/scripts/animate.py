@@ -17,6 +17,7 @@ from gcbmanimation.layer.units import Units
 from gcbmanimation.animator.animator import Animator
 from gcbmanimation.layer.boundingbox import BoundingBox
 from gcbmanimation.color.quantilecolorizer import QuantileColorizer
+from gcbmanimation.util.tempfile import TempFileManager
 
 def find_units(units_str):
     try:
@@ -26,6 +27,7 @@ def find_units(units_str):
 
 def cli():
     logging.basicConfig(stream=sys.stdout, level=logging.INFO, format="%(message)s")
+    TempFileManager.delete_on_exit()
 
     parser = ArgumentParser(description="Create GCBM results animations")
     parser.add_argument("study_area", type=os.path.abspath, help="Path to study area file for GCBM spatial input")

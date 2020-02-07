@@ -24,8 +24,8 @@ class BasicResultsPlot(ResultsPlot):
         Returns a list of Frames, one for each year of output.
         '''
         indicator_data = self._provider.get_annual_result(start_year, end_year, self._units, **kwargs)
-        years = list(indicator_data.keys())
-        values = list(indicator_data.values())
+        years = sorted(indicator_data)
+        values = [indicator_data[year] for year in years]
 
         frames = []
         for i, year in enumerate(years):

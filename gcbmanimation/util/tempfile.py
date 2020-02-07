@@ -1,15 +1,41 @@
 import os
+import weakref
+import shutil
+import warnings
 from tempfile import NamedTemporaryFile
-from tempfile import TemporaryDirectory
+from tempfile import gettempdir
 from glob import glob
+
+class NamedTemporaryDirectory:
+
+    def __init__(self, name):
+        os.makedirs(name, exist_ok=True)
+        self.name = name
+        self._finalizer = weakref.finalize(
+            self, self._cleanup, self.name,
+            warn_message="Implicitly cleaning up {!r}".format(self))
+
+    @classmethod
+    def _cleanup(cls, name, warn_message):
+        shutil.rmtree(name)
+        warnings.warn(warn_message, ResourceWarning)
+
+    def __repr__(self):
+        return "<{} {!r}>".format(self.__class__.__name__, self.name)
+
 
 class TempFileManager:
     
-    _temp_dir = TemporaryDirectory()
+    _temp_dir = None
+    _name = os.path.join(gettempdir(), "gcbmanimation_temp")
     _no_cleanup = []
 
     def __init__(self):
         raise RuntimeError("Not instantiable")
+
+    @staticmethod
+    def delete_on_exit():
+        TempFileManager._temp_dir = NamedTemporaryDirectory(TempFileManager._name)
 
     @staticmethod
     def cleanup(pattern="*"):
@@ -21,7 +47,7 @@ class TempFileManager:
         Arguments:
         'pattern' -- the file pattern to delete, or all files by default.
         '''
-        for fn in glob(os.path.join(TempFileManager._temp_dir.name, pattern)):
+        for fn in glob(os.path.join(TempFileManager._name, pattern)):
             if fn not in TempFileManager._no_cleanup:
                 os.remove(fn)
 
@@ -36,7 +62,8 @@ class TempFileManager:
         'no_manual_cleanup' -- prevents this file from being deleted by calls to
             TempFileManager.cleanup()
         '''
-        temp_file_name = NamedTemporaryFile("w", dir=TempFileManager._temp_dir.name, delete=False, **kwargs).name
+        os.makedirs(TempFileManager._name, exist_ok=True)
+        temp_file_name = NamedTemporaryFile("w", dir=TempFileManager._name, delete=False, **kwargs).name
         if no_manual_cleanup:
             TempFileManager._no_cleanup.append(temp_file_name)
 

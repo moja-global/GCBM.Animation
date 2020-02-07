@@ -2,6 +2,7 @@ import os
 import gdal
 from itertools import chain
 from collections import defaultdict
+from multiprocessing import Pool
 from gcbmanimation.layer.layer import Layer
 from gcbmanimation.layer.units import Units
 from gcbmanimation.layer.layer import BlendMode
@@ -114,45 +115,53 @@ class LayerCollection:
         Returns a list of rendered Frame objects and a legend (dict) describing
         the colors.
         '''
-        layer_years = {layer.year for layer in self._layers}
-        render_years = set(range(start_year, end_year + 1)) if start_year and end_year else layer_years
-        working_layers = [layer for layer in self._layers if layer.year in render_years]
-        if bounding_box:
-            working_layers = [bounding_box.crop(layer) for layer in working_layers]
+        with Pool() as pool:
+            layer_years = {layer.year for layer in self._layers}
+            render_years = set(range(start_year, end_year + 1)) if start_year and end_year else layer_years
+            working_layers = [layer for layer in self._layers if layer.year in render_years]
+            if bounding_box:
+                working_layers = pool.map(bounding_box.crop, working_layers)
 
-        working_layers = [layer.convert_units(units) for layer in working_layers]
+            tasks = [pool.apply_async(layer.convert_units, (units,)) for layer in working_layers]
+            working_layers = [task.get() for task in tasks]
 
-        common_interpretation = None
-        interpreted = any((layer.has_interpretation for layer in working_layers))
-        if interpreted:
-            # Interpreted layers where the pixel values have meaning, i.e. a disturbance type,
-            # get their pixel values normalized across the whole collection.
-            unique_values = sorted(set(chain(*(layer.interpretation.values() for layer in working_layers))))
-            common_interpretation = {i: value for i, value in enumerate(unique_values, 1)}
-            working_layers = [layer.reclassify(common_interpretation) for layer in working_layers]
+            common_interpretation = None
+            interpreted = any((layer.has_interpretation for layer in working_layers))
+            if interpreted:
+                # Interpreted layers where the pixel values have meaning, i.e. a disturbance type,
+                # get their pixel values normalized across the whole collection.
+                unique_values = sorted(set(chain(*(layer.interpretation.values() for layer in working_layers))))
+                common_interpretation = {i: value for i, value in enumerate(unique_values, 1)}
+                tasks = [pool.apply_async(layer.reclassify, (common_interpretation,)) for layer in working_layers]
+                working_layers = [task.get() for task in tasks]
 
-        # Merge the layers together by year if this is a fragmented collection of layers,
-        # i.e. fire and harvest in separate files.
-        layers_by_year = defaultdict(list)
-        for layer in working_layers:
-            layers_by_year[layer.year].append(layer)
+            # Merge the layers together by year if this is a fragmented collection of layers,
+            # i.e. fire and harvest in separate files.
+            layers_by_year = defaultdict(list)
+            for layer in working_layers:
+                layers_by_year[layer.year].append(layer)
 
-        background_layer = bounding_box or working_layers[0]
-        background_frame = background_layer.flatten().render(
-            {1: {"color": self._background_color}}, bounding_box=bounding_box, transparent=False)
+            background_layer = bounding_box or working_layers[0]
+            background_frame = background_layer.flatten().render(
+                {1: {"color": self._background_color}}, bounding_box=bounding_box, transparent=False)
 
-        working_layers = [self._merge_layers(layers) for layers in layers_by_year.values()]
-        legend = self._colorizer.create_legend(working_layers)
-        rendered_layers = [
-            layer.render(legend).composite(background_frame, send_to_bottom=True)
-            for layer in working_layers]
+            # Merge groups of layers by year.
+            working_layers = pool.map(self._merge_layers, layers_by_year.values())
+            legend = self._colorizer.create_legend(working_layers)
 
-        missing_years = render_years - layer_years
-        rendered_layers.extend([
-            Frame(year, background_frame.path, background_frame.scale)
-            for year in missing_years])
+            # Render the merged layers.
+            tasks = [pool.apply_async(layer.render, (legend,)) for layer in working_layers]
+            rendered_layers = [task.get() for task in tasks]
+
+            # Add the background to the rendered layers.
+            rendered_layers = [layer.composite(background_frame, True) for layer in rendered_layers]
+
+            missing_years = render_years - layer_years
+            rendered_layers.extend([
+                Frame(year, background_frame.path, background_frame.scale)
+                for year in missing_years])
         
-        return rendered_layers, legend
+            return rendered_layers, legend
 
     def _merge_layers(self, layers):
         if len(layers) == 1:
