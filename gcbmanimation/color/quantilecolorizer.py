@@ -102,7 +102,11 @@ class QuantileColorizer(Colorizer):
         for layer in layers:
             layer_data = self._load_layer_data(layer, filter)
             if layer_data.size > data_points_per_layer:
+                # Keep the min/max values when trimming the dataset so that the
+                # legend ranges are correct.
+                data_bounds = [layer_data.min(), layer_data.max()]
                 layer_data = np.random.choice(layer_data, data_points_per_layer)
+                layer_data = np.append(layer_data, data_bounds)
 
             all_layer_data = np.append(all_layer_data, layer_data)
 
