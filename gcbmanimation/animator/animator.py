@@ -41,7 +41,6 @@ class Animator:
             map, disturbances) separately in addition to the standard 4-quadrant
             layout.
         '''
-        TempFileManager.delete_on_exit()
         os.makedirs(self._output_path, exist_ok=True)
 
         layout = QuadrantLayout((50, 60), (50, 60), (50, 40), (50, 40))
