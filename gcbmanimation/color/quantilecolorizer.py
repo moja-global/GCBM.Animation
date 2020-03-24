@@ -1,3 +1,7 @@
+# Suppress deprecated API warning from older version of PySAL.
+import warnings
+warnings.simplefilter("ignore")
+
 import gdal
 import psutil
 import numpy as np

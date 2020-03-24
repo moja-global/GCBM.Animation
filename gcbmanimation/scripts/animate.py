@@ -1,7 +1,3 @@
-# Suppress deprecated API warning from older version of PySAL.
-import warnings
-warnings.simplefilter("ignore")
-
 import os
 import sys
 import sqlite3
