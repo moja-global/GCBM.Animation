@@ -43,11 +43,11 @@ class DisturbanceLayerConfigurer:
         study_area_dir = os.path.dirname(study_area_path)
         for layer in disturbance_layers:
             layer_tif = os.path.join(study_area_dir, f"{layer['name']}_moja.tiff")
-            layer_metadata_file = os.path.join(
-                study_area_dir,
-                f"{layer['name']}_moja", f"{layer['name']}_moja.json")
+            layer_metadata_file = self._find_first(
+                os.path.join(study_area_dir, f"{layer['name']}_moja", f"{layer['name']}_moja.json"),
+                os.path.join(study_area_dir, f"{layer['name']}_moja.json"))
 
-            if not self._files_exist(layer_tif, layer_metadata_file):
+            if not os.path.exists(layer_tif) or not layer_metadata_file:
                 continue
 
             layer_attribute_table = json.load(open(layer_metadata_file, "rb")).get("attributes")
@@ -66,5 +66,9 @@ class DisturbanceLayerConfigurer:
 
         return layer_collection
 
-    def _files_exist(self, *paths):
-        return all((os.path.exists(path) for path in paths))
+    def _find_first(self, *paths):
+        for path in paths:
+            if os.path.exists(path):
+                return path
+
+        return None
