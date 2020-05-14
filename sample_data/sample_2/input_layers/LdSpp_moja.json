@@ -1,0 +1,32 @@
+{
+    "layer_type": "GridLayer",
+    "layer_data": "Int16",
+    "nodata": 255,
+    "tileLatSize": 1.0,
+    "tileLonSize": 1.0,
+    "blockLatSize": 0.1,
+    "blockLonSize": 0.1,
+    "cellLatSize": 0.01,
+    "cellLonSize": 0.01,
+    "attributes": {
+        "1": "Western larch",
+        "2": "Lodgepole pine",
+        "3": "Aspen",
+        "4": "Douglas-fir",
+        "5": "Poplar",
+        "6": "Ponderosa pine",
+        "7": "Engelmann spruce",
+        "8": "Subalpine fir",
+        "9": "Paper birch",
+        "10": "Spruce",
+        "11": "Redcedar",
+        "12": "Western hemlock",
+        "13": "Western white pine",
+        "14": "Softwoods",
+        "15": "Cottonwood",
+        "16": "Tamarack",
+        "17": "Whitebark pine",
+        "18": "Red alder",
+        "19": "Alpine larch"
+    }
+}

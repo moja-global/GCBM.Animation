@@ -1,0 +1,104 @@
+{
+    "tile_size": 1.0,
+    "block_size": 0.1,
+    "tiles": [
+        {
+            "x": -120,
+            "y": 50,
+            "index": 14460
+        },
+        {
+            "x": -119,
+            "y": 50,
+            "index": 14461
+        }
+    ],
+    "pixel_size": 0.01,
+    "layers": [
+        {
+            "name": "initial_age",
+            "type": "VectorLayer"
+        },
+        {
+            "name": "mean_annual_temperature",
+            "type": "RasterLayer"
+        },
+        {
+            "name": "LdSpp",
+            "type": "VectorLayer",
+            "tags": [
+                "classifier"
+            ]
+        },
+        {
+            "name": "fire_1994",
+            "type": "DisturbanceLayer",
+            "tags": [
+                "disturbance"
+            ]
+        },
+        {
+            "name": "mpb1990",
+            "type": "DisturbanceLayer",
+            "tags": [
+                "disturbance"
+            ]
+        },
+        {
+            "name": "mpb1991",
+            "type": "DisturbanceLayer",
+            "tags": [
+                "disturbance"
+            ]
+        },
+        {
+            "name": "mpb1992",
+            "type": "DisturbanceLayer",
+            "tags": [
+                "disturbance"
+            ]
+        },
+        {
+            "name": "mpb1993",
+            "type": "DisturbanceLayer",
+            "tags": [
+                "disturbance"
+            ]
+        },
+        {
+            "name": "mpb1994",
+            "type": "DisturbanceLayer",
+            "tags": [
+                "disturbance"
+            ]
+        },
+        {
+            "name": "mpb1995",
+            "type": "DisturbanceLayer",
+            "tags": [
+                "disturbance"
+            ]
+        },
+        {
+            "name": "mpb1996",
+            "type": "DisturbanceLayer",
+            "tags": [
+                "disturbance"
+            ]
+        },
+        {
+            "name": "mpb1999",
+            "type": "DisturbanceLayer",
+            "tags": [
+                "disturbance"
+            ]
+        },
+        {
+            "name": "mpb2000",
+            "type": "DisturbanceLayer",
+            "tags": [
+                "disturbance"
+            ]
+        }
+    ]
+}
