@@ -1,0 +1,46 @@
+name: Python CI Workflow
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  test:
+    runs-on: ubuntu-18.04
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version:
+          - "3.7"
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Upgrade pip version
+        run: |
+          python3 -m pip install --upgrade pip
+
+      - name: Installs all the Dependencies
+        run: |
+          sudo apt-get install libgdal-dev
+          export CPLUS_INCLUDE_PATH=/usr/include/gdal
+          export C_INCLUDE_PATH=/usr/include/gdal
+          pip3 install gdal==$(gdal-config --version)
+          python3 setup.py install
+
+      - name: Checks the Application Build
+        run: |
+          pip3 install wheel
+          python3 setup.py sdist bdist_wheel
+
+      - name: Lint with flake8
+        run: |
+          pip3 install flake8
+          flake8 .

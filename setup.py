@@ -19,7 +19,7 @@ setup(
     ],
     keywords="moja.global",
     packages=find_packages(exclude=["contrib", "docs", "tests"]),
-    install_requires=["numpy", "matplotlib", "seaborn", "imageio", "imageio-ffmpeg", "pillow", "geopy", "pysal<=1.15.0", "utm"],
+    install_requires=["numpy", "matplotlib", "seaborn", "pillow", "geopy", "pysal<=1.15.0", "utm", "imageio-ffmpeg", "imageio"],
     extras_require={},
     package_data={},
     data_files=[],
