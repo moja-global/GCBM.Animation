@@ -1,5 +1,6 @@
 # Suppress deprecated API warning from older version of PySAL.
 import warnings
+
 warnings.simplefilter("ignore")
 
 import gdal
@@ -11,14 +12,15 @@ from pysal.esda.mapclassify import Quantiles
 from gcbmanimation.color.colorizer import Colorizer
 from gcbmanimation.util.config import gdal_memory_limit
 
+
 class Filter(Enum):
 
     Negative = -1
-    Positive =  1
+    Positive = 1
 
 
 class QuantileColorizer(Colorizer):
-    '''
+    """
     Creates a legend using quantiles - usually shows more activity in rendered
     maps than the standard Colorizer's equal bin size method. Accepts the standard
     Colorizer constructor arguments plus some CustomColorizer-specific settings.
@@ -28,7 +30,7 @@ class QuantileColorizer(Colorizer):
         below 0; if provided, value bins are split into above and below zero, with
         positive values using the colors from the 'palette' argument. By default,
         the entire value range (+/-) is binned and colorized together.
-    '''
+    """
 
     def __init__(self, negative_palette=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -51,13 +53,15 @@ class QuantileColorizer(Colorizer):
             if i == 0:
                 legend[upper_bound] = {
                     "label": f"<= {self._format_value(upper_bound)}",
-                    "color": next(colors)}
+                    "color": next(colors),
+                }
             else:
                 lower_bound = bins[i - 1]
                 legend[(lower_bound, upper_bound)] = {
                     "label": f"{self._format_value(lower_bound)} to {self._format_value(upper_bound)}",
-                    "color": next(colors)}
-       
+                    "color": next(colors),
+                }
+
         return legend
 
     def _create_split_value_legend(self, layers):
@@ -75,13 +79,15 @@ class QuantileColorizer(Colorizer):
             if i == 0:
                 legend[upper_bound] = {
                     "label": f"<= {self._format_value(upper_bound)}",
-                    "color": negative_colors[-i - 1]}
+                    "color": negative_colors[-i - 1],
+                }
             else:
                 upper_bound = 0 if i == k - 1 else upper_bound
                 lower_bound = negative_bins[i - 1]
                 legend[(lower_bound, upper_bound)] = {
                     "label": f"{self._format_value(lower_bound)} to {self._format_value(upper_bound)}",
-                    "color": negative_colors[-i - 1]}
+                    "color": negative_colors[-i - 1],
+                }
 
         positive_data = self._get_quantile_dataset(layers, Filter.Positive)
         positive_quantiles = Quantiles(positive_data, k=k)
@@ -94,13 +100,16 @@ class QuantileColorizer(Colorizer):
             lower_bound = 0 if i == 0 else positive_bins[i - 1]
             legend[(lower_bound, upper_bound)] = {
                 "label": f"{self._format_value(lower_bound)} to {self._format_value(upper_bound)}",
-                "color": next(positive_colors)}
+                "color": next(positive_colors),
+            }
 
         return legend
 
     def _get_quantile_dataset(self, layers, filter=None):
         # Cap the maximum amount of data to load to avoid running out of memory.
-        data_points_per_layer = int(psutil.virtual_memory().available * 0.75 / (64 / 8) / len(layers) / 4)
+        data_points_per_layer = int(
+            psutil.virtual_memory().available * 0.75 / (64 / 8) / len(layers) / 4
+        )
 
         all_layer_data = np.empty(shape=(0, 0))
         for layer in layers:
@@ -122,8 +131,12 @@ class QuantileColorizer(Colorizer):
         raster_data[np.where(raster_data == layer.nodata_value)] = np.nan
         raster_data = raster_data.reshape(raster_data.size)
         raster_data = raster_data[np.logical_not(np.isnan(raster_data))]
-        raster_data = raster_data[np.where(raster_data <= 0)] if filter == Filter.Negative \
-                 else raster_data[np.where(raster_data  > 0)] if filter == Filter.Positive \
-                 else raster_data
+        raster_data = (
+            raster_data[np.where(raster_data <= 0)]
+            if filter == Filter.Negative
+            else raster_data[np.where(raster_data > 0)]
+            if filter == Filter.Positive
+            else raster_data
+        )
 
         return raster_data

@@ -6,14 +6,17 @@ from tempfile import NamedTemporaryFile
 from tempfile import gettempdir
 from glob import glob
 
-class NamedTemporaryDirectory:
 
+class NamedTemporaryDirectory:
     def __init__(self, name):
         os.makedirs(name, exist_ok=True)
         self.name = name
         self._finalizer = weakref.finalize(
-            self, self._cleanup, self.name,
-            warn_message="Implicitly cleaning up {!r}".format(self))
+            self,
+            self._cleanup,
+            self.name,
+            warn_message="Implicitly cleaning up {!r}".format(self),
+        )
 
     @classmethod
     def _cleanup(cls, name, warn_message):
@@ -25,7 +28,7 @@ class NamedTemporaryDirectory:
 
 
 class TempFileManager:
-    
+
     _temp_dir = None
     _name = os.path.join(gettempdir(), "gcbmanimation_temp")
     _no_cleanup = []
@@ -39,21 +42,21 @@ class TempFileManager:
 
     @staticmethod
     def cleanup(pattern="*"):
-        '''
+        """
         Manually cleans up files in the gcbmanimation temp directory matching the
         specified glob pattern, or all files by default. Remaining files will still
         be deleted when the interpreter exits.
 
         Arguments:
         'pattern' -- the file pattern to delete, or all files by default.
-        '''
+        """
         for fn in glob(os.path.join(TempFileManager._name, pattern)):
             if fn not in TempFileManager._no_cleanup:
                 os.remove(fn)
 
     @staticmethod
     def mktmp(no_manual_cleanup=False, **kwargs):
-        '''
+        """
         Gets a unique temporary file name located in the gcbmanimation temp directory.
         Accepts any arguments supported by NamedTemporaryFile. Temporary files will be
         deleted when the interpreter exits.
@@ -61,9 +64,11 @@ class TempFileManager:
         Arguments:
         'no_manual_cleanup' -- prevents this file from being deleted by calls to
             TempFileManager.cleanup()
-        '''
+        """
         os.makedirs(TempFileManager._name, exist_ok=True)
-        temp_file_name = NamedTemporaryFile("w", dir=TempFileManager._name, delete=False, **kwargs).name
+        temp_file_name = NamedTemporaryFile(
+            "w", dir=TempFileManager._name, delete=False, **kwargs
+        ).name
         if no_manual_cleanup:
             TempFileManager._no_cleanup.append(temp_file_name)
 

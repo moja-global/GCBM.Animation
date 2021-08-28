@@ -1,18 +1,21 @@
 from gcbmanimation.layer.units import Units
 
+
 class GcbmResultsProvider:
-    '''
+    """
     Base class for retrieving non-spatial GCBM results. Subclass to support different
     database types, i.e. SQLite.
-    '''
-    
+    """
+
     @property
     def simulation_years(self):
-        '''The start and end year of the simulation.'''
+        """The start and end year of the simulation."""
         raise NotImplementedError()
 
-    def get_annual_result(self, start_year=None, end_year=None, units=Units.Tc, **kwargs):
-        '''
+    def get_annual_result(
+        self, start_year=None, end_year=None, units=Units.Tc, **kwargs
+    ):
+        """
         Gets an ordered collection of annual results for a particular indicator,
         optionally dividing the values by the specified units.
 
@@ -25,5 +28,5 @@ class GcbmResultsProvider:
 
         Returns an OrderedDict of simulation year to indicator value where the
         keys are in ascending chronological order.
-        '''
+        """
         raise NotImplementedError()

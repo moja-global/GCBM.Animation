@@ -2,8 +2,9 @@ import seaborn as sns
 from collections import OrderedDict
 from gcbmanimation.color.colorizer import Colorizer
 
+
 class CustomColorizer(Colorizer):
-    '''
+    """
     Colorizes a set of layers based on a user-provided color scheme. Accepts the
     standard Colorizer constructor arguments plus some CustomColorizer-specific
     settings.
@@ -13,7 +14,7 @@ class CustomColorizer(Colorizer):
         a color palette to group the interpreted values by.
     'value_colorizer' -- optional alternative colorizer to use for creating legend
         for layers with no interpretation; if not provided, uses the default method.
-    '''
+    """
 
     def __init__(self, custom_colors, value_colorizer=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -47,8 +48,6 @@ class CustomColorizer(Colorizer):
             if not pixel_value:
                 continue
 
-            legend[pixel_value] = {
-                "label": interpreted_value,
-                "color": color}
+            legend[pixel_value] = {"label": interpreted_value, "color": color}
 
         return legend

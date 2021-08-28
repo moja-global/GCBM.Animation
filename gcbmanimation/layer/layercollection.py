@@ -12,8 +12,9 @@ from gcbmanimation.util.config import gdal_creation_options
 from gcbmanimation.util.config import gdal_memory_limit
 from gcbmanimation.util.tempfile import TempFileManager
 
+
 class LayerCollection:
-    '''
+    """
     A collection of Layer objects that belong together in an animation. The layers
     in the collection should be generally related, i.e. a collection of interpreted
     layers along the same theme (disturbances), or a collection of value layers for
@@ -28,7 +29,7 @@ class LayerCollection:
     'background_color' -- RGB tuple for the background color.
     'colorizer' -- a Colorizer to create the legend with - defaults to
         basic Colorizer which bins values into 8 equal-sized buckets.
-    '''
+    """
 
     def __init__(self, layers=None, background_color=(224, 224, 224), colorizer=None):
         self._layers = layers or []
@@ -37,54 +38,78 @@ class LayerCollection:
 
     @property
     def empty(self):
-        '''Checks if this collection is empty.'''
+        """Checks if this collection is empty."""
         return not self._layers
 
     @property
     def layers(self):
-        '''Gets the layers in this collection.'''
+        """Gets the layers in this collection."""
         return list(self._layers)
 
     def append(self, layer):
-        '''Appends a layer to the collection.'''
+        """Appends a layer to the collection."""
         self._layers.append(layer)
 
     def merge(self, other):
-        '''Merges another LayerCollection's layers into this one.'''
+        """Merges another LayerCollection's layers into this one."""
         self._layers.extend(other._layers)
 
     def blend(self, *collections):
-        '''
+        """
         Blends this collection's layer values with one or more other collections.
 
         Arguments:
         'collections' -- one or more other LayerCollections to blend paired with
             the blend mode, i.e.
             some_layers.blend(layers_a, BlendMode.Add, layers_b, BlendMode.Subtract)
-        '''
+        """
         blend_collections = list(zip(collections[::2], collections[1::2]))
-        blended_collection = LayerCollection(background_color=self._background_color, colorizer=self._colorizer)
+        blended_collection = LayerCollection(
+            background_color=self._background_color, colorizer=self._colorizer
+        )
 
-        years = set(chain(
-            (layer.year for layer in self._layers),
-            *[(layer.year for layer in collection._layers) for collection, _ in blend_collections]))
+        years = set(
+            chain(
+                (layer.year for layer in self._layers),
+                *[
+                    (layer.year for layer in collection._layers)
+                    for collection, _ in blend_collections
+                ]
+            )
+        )
 
         for year in years:
             local_layers = list(filter(lambda layer: layer.year == year, self._layers))
             if len(local_layers) > 1:
-                raise RuntimeError("Cannot blend collections containing more than one layer per year.")
+                raise RuntimeError(
+                    "Cannot blend collections containing more than one layer per year."
+                )
 
             if local_layers:
                 local_layer = local_layers[0]
             else:
-                placeholder = self._layers[0].flatten(0, True) if self._layers \
-                    else next(chain(*(collection._layers for collection, _ in blend_collections))).flatten(0, True)
+                placeholder = (
+                    self._layers[0].flatten(0, True)
+                    if self._layers
+                    else next(
+                        chain(
+                            *(collection._layers for collection, _ in blend_collections)
+                        )
+                    ).flatten(0, True)
+                )
 
-                local_layer = Layer(placeholder.path, year, placeholder.interpretation, placeholder.units)
-            
+                local_layer = Layer(
+                    placeholder.path,
+                    year,
+                    placeholder.interpretation,
+                    placeholder.units,
+                )
+
             other_layers = []
             for collection, blend_mode in blend_collections:
-                for layer in filter(lambda layer: layer.year == year, collection._layers):
+                for layer in filter(
+                    lambda layer: layer.year == year, collection._layers
+                ):
                     other_layers.extend([layer, blend_mode])
 
             if not other_layers:
@@ -95,8 +120,10 @@ class LayerCollection:
 
         return blended_collection
 
-    def render(self, bounding_box=None, start_year=None, end_year=None, units=Units.TcPerHa):
-        '''
+    def render(
+        self, bounding_box=None, start_year=None, end_year=None, units=Units.TcPerHa
+    ):
+        """
         Renders the collection of layers into colorized Frame objects organized
         by year.
 
@@ -114,15 +141,24 @@ class LayerCollection:
         
         Returns a list of rendered Frame objects and a legend (dict) describing
         the colors.
-        '''
+        """
         with Pool() as pool:
             layer_years = {layer.year for layer in self._layers}
-            render_years = set(range(start_year, end_year + 1)) if start_year and end_year else layer_years
-            working_layers = [layer for layer in self._layers if layer.year in render_years]
+            render_years = (
+                set(range(start_year, end_year + 1))
+                if start_year and end_year
+                else layer_years
+            )
+            working_layers = [
+                layer for layer in self._layers if layer.year in render_years
+            ]
             if bounding_box:
                 working_layers = pool.map(bounding_box.crop, working_layers)
 
-            tasks = [pool.apply_async(layer.convert_units, (units,)) for layer in working_layers]
+            tasks = [
+                pool.apply_async(layer.convert_units, (units,))
+                for layer in working_layers
+            ]
             working_layers = [task.get() for task in tasks]
 
             common_interpretation = None
@@ -130,9 +166,20 @@ class LayerCollection:
             if interpreted:
                 # Interpreted layers where the pixel values have meaning, i.e. a disturbance type,
                 # get their pixel values normalized across the whole collection.
-                unique_values = sorted(set(chain(*(layer.interpretation.values() for layer in working_layers))))
-                common_interpretation = {i: value for i, value in enumerate(unique_values, 1)}
-                tasks = [pool.apply_async(layer.reclassify, (common_interpretation,)) for layer in working_layers]
+                unique_values = sorted(
+                    set(
+                        chain(
+                            *(layer.interpretation.values() for layer in working_layers)
+                        )
+                    )
+                )
+                common_interpretation = {
+                    i: value for i, value in enumerate(unique_values, 1)
+                }
+                tasks = [
+                    pool.apply_async(layer.reclassify, (common_interpretation,))
+                    for layer in working_layers
+                ]
                 working_layers = [task.get() for task in tasks]
 
             # Merge the layers together by year if this is a fragmented collection of layers,
@@ -143,24 +190,34 @@ class LayerCollection:
 
             background_layer = bounding_box or working_layers[0]
             background_frame = background_layer.flatten().render(
-                {1: {"color": self._background_color}}, bounding_box=bounding_box, transparent=False)
+                {1: {"color": self._background_color}},
+                bounding_box=bounding_box,
+                transparent=False,
+            )
 
             # Merge groups of layers by year.
             working_layers = pool.map(self._merge_layers, layers_by_year.values())
             legend = self._colorizer.create_legend(working_layers)
 
             # Render the merged layers.
-            tasks = [pool.apply_async(layer.render, (legend,)) for layer in working_layers]
+            tasks = [
+                pool.apply_async(layer.render, (legend,)) for layer in working_layers
+            ]
             rendered_layers = [task.get() for task in tasks]
 
             # Add the background to the rendered layers.
-            rendered_layers = [layer.composite(background_frame, True) for layer in rendered_layers]
+            rendered_layers = [
+                layer.composite(background_frame, True) for layer in rendered_layers
+            ]
 
             missing_years = render_years - layer_years
-            rendered_layers.extend([
-                Frame(year, background_frame.path, background_frame.scale)
-                for year in missing_years])
-        
+            rendered_layers.extend(
+                [
+                    Frame(year, background_frame.path, background_frame.scale)
+                    for year in missing_years
+                ]
+            )
+
             return rendered_layers, legend
 
     def _merge_layers(self, layers):
@@ -169,7 +226,13 @@ class LayerCollection:
 
         output_path = TempFileManager.mktmp(suffix=".tif")
         gdal.SetCacheMax(gdal_memory_limit)
-        gdal.Warp(output_path, [layer.path for layer in layers], creationOptions=gdal_creation_options)
-        merged_layer = Layer(output_path, layers[0].year, layers[0].interpretation, layers[0].units)
+        gdal.Warp(
+            output_path,
+            [layer.path for layer in layers],
+            creationOptions=gdal_creation_options,
+        )
+        merged_layer = Layer(
+            output_path, layers[0].year, layers[0].interpretation, layers[0].units
+        )
 
         return merged_layer
