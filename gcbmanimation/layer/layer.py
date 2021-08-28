@@ -227,7 +227,7 @@ class Layer:
         Arguments:
         'new_interpretation' -- dictionary of pixel value to interpreted value.
         'nodata_value' -- the new nodata pixel value.
-        
+
         Returns a new reclassified Layer object.
         """
         gdal.SetCacheMax(gdal_memory_limit)
@@ -381,7 +381,7 @@ class Layer:
             to the bounding box's minimum spatial extent and nodata pixels.
         'transparent' -- whether or not nodata and 0-value pixels should be
             transparent in the rendered Frame.
-        
+
         Returns this layer as a colorized Frame object.
         """
         with open(TempFileManager.mktmp(suffix=".txt"), "w") as color_table:

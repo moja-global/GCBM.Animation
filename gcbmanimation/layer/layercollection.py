@@ -138,7 +138,7 @@ class LayerCollection:
             with start_year.
         'units' -- optional units to render the output in (default: tc/ha). Layers
             in the collection will be converted to these units if necessary.
-        
+
         Returns a list of rendered Frame objects and a legend (dict) describing
         the colors.
         """
