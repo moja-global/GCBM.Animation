@@ -80,7 +80,7 @@ if __name__ == "__main__":
 
     for frame in composite_indicator.render_graph_frames():
         shutil.copyfile(frame.path, rf"c:\tmp\{composite_indicator.title}_graph_{frame.year}.png")
-    
+
     # Test cropped area.
     import mojadata.boundingbox as moja
     from mojadata.layer.vectorlayer import VectorLayer
@@ -94,7 +94,6 @@ if __name__ == "__main__":
     moja_bbox.init()
     cropped_bbox = BoundingBox("bounding_box.tiff", find_best_projection(Layer("bounding_box.tiff", 0)))
     results_provider = SpatialGcbmResultsProvider(r"C:\Projects\Standalone_Template\processed_output\spatial\NPP*.tiff")
-    
     indicator = Indicator(
         "NPP", r"C:\Projects\Standalone_Template\processed_output\spatial\NPP*.tiff", results_provider,
         graph_units=Units.Tc, title="NPP Cropped")

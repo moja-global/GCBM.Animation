@@ -6,8 +6,9 @@ from gcbmanimation.layer.layer import Layer
 from gcbmanimation.layer.layercollection import LayerCollection
 from gcbmanimation.plot.basicresultsplot import BasicResultsPlot
 
+
 class Indicator:
-    '''
+    """
     Defines an ecosystem indicator from the GCBM results to render into colorized
     Frame objects. An indicator is a collection of spatial outputs and a related
     indicator from the GCBM results database.
@@ -33,11 +34,20 @@ class Indicator:
         frames.
     'colorizer' -- a Colorizer to create the map legend with - defaults to
         basic Colorizer which bins values into equal-sized buckets.
-    '''
+    """
 
-    def __init__(self, indicator, layer_pattern, results_provider, provider_filter=None,
-                 title=None, graph_units=Units.Tc, map_units=Units.TcPerHa,
-                 background_color=(255, 255, 255), colorizer=None):
+    def __init__(
+        self,
+        indicator,
+        layer_pattern,
+        results_provider,
+        provider_filter=None,
+        title=None,
+        graph_units=Units.Tc,
+        map_units=Units.TcPerHa,
+        background_color=(255, 255, 255),
+        colorizer=None,
+    ):
         self._indicator = indicator
         self._layer_pattern = layer_pattern
         self._results_provider = results_provider
@@ -50,31 +60,31 @@ class Indicator:
 
     @property
     def title(self):
-        '''Gets the indicator title.'''
+        """Gets the indicator title."""
         return self._title
 
     @property
     def indicator(self):
-        '''Gets the short title for the indicator.'''
+        """Gets the short title for the indicator."""
         return self._indicator
 
     @property
     def map_units(self):
-        '''Gets the Units for the spatial output.'''
+        """Gets the Units for the spatial output."""
         return self._map_units
-    
+
     @property
     def graph_units(self):
-        '''Gets the Units for the graphed/non-spatial output.'''
+        """Gets the Units for the graphed/non-spatial output."""
         return self._graph_units
 
     @property
     def simulation_years(self):
-        '''Gets the years present in the simulation.'''
+        """Gets the years present in the simulation."""
         return self._results_provider.simulation_years
-    
+
     def render_map_frames(self, bounding_box=None, start_year=None, end_year=None):
-        '''
+        """
         Renders the indicator's spatial output into colorized Frame objects.
 
         Arguments:
@@ -83,33 +93,39 @@ class Indicator:
 
         Returns a list of colorized Frames, one for each year of output, and a
         legend in dictionary format describing the colors.
-        '''
+        """
         layers = self._find_layers()
         if not start_year or not end_year:
             start_year, end_year = self._results_provider.simulation_years
-        
+
         return layers.render(bounding_box, start_year, end_year, self._map_units)
 
     def render_graph_frames(self, start_year=None, end_year=None, **kwargs):
-        '''
+        """
         Renders the indicator's non-spatial output into a graph.
 
         Arguments:
         Any accepted by GCBMResultsProvider and subclasses.
 
         Returns a list of Frames, one for each year of output.
-        '''
-        plot = BasicResultsPlot(self._indicator, self._results_provider, self._graph_units)
-        
-        return plot.render(start_year=start_year, end_year=end_year, **self._provider_filter, **kwargs)
-       
+        """
+        plot = BasicResultsPlot(
+            self._indicator, self._results_provider, self._graph_units
+        )
+
+        return plot.render(
+            start_year=start_year, end_year=end_year, **self._provider_filter, **kwargs
+        )
+
     def _find_layers(self):
         pattern = self._layer_pattern
         units = Units.TcPerHa
         if isinstance(self._layer_pattern, tuple):
             pattern, units = self._layer_pattern
 
-        layers = LayerCollection(background_color=self._background_color, colorizer=self._colorizer)
+        layers = LayerCollection(
+            background_color=self._background_color, colorizer=self._colorizer
+        )
         for layer_path in glob(pattern):
             year = os.path.splitext(layer_path)[0][-4:]
             layer = Layer(layer_path, year, units=units)

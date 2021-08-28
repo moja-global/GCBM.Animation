@@ -4,19 +4,20 @@ from collections import OrderedDict
 from gcbmanimation.provider.gcbmresultsprovider import GcbmResultsProvider
 from gcbmanimation.layer.units import Units
 
+
 class SqliteGcbmResultsProvider(GcbmResultsProvider):
-    '''
+    """
     Retrieves non-spatial annual results from a SQLite GCBM results database.
 
     Arguments:
     'path' -- path to SQLite GCBM results database.
-    '''
+    """
 
     results_tables = {
         "v_flux_indicator_aggregates": "flux_tc",
-        "v_flux_indicators"          : "flux_tc",
-        "v_pool_indicators"          : "pool_tc",
-        "v_stock_change_indicators"  : "flux_tc",
+        "v_flux_indicators": "flux_tc",
+        "v_pool_indicators": "pool_tc",
+        "v_stock_change_indicators": "flux_tc",
     }
 
     def __init__(self, path):
@@ -27,14 +28,18 @@ class SqliteGcbmResultsProvider(GcbmResultsProvider):
 
     @property
     def simulation_years(self):
-        '''See GcbmResultsProvider.simulation_years.'''
+        """See GcbmResultsProvider.simulation_years."""
         conn = sqlite3.connect(self._path)
-        years = conn.execute("SELECT MIN(year), MAX(year) from v_age_indicators").fetchone()
+        years = conn.execute(
+            "SELECT MIN(year), MAX(year) from v_age_indicators"
+        ).fetchone()
 
         return years
 
-    def get_annual_result(self, start_year=None, end_year=None, units=Units.Tc, indicator=None, **kwargs):
-        '''See GcbmResultsProvider.get_annual_result.'''
+    def get_annual_result(
+        self, start_year=None, end_year=None, units=Units.Tc, indicator=None, **kwargs
+    ):
+        """See GcbmResultsProvider.get_annual_result."""
         conn = sqlite3.connect(self._path)
         table, value_col = self._find_indicator_table(indicator)
         _, units_tc, _ = units.value
@@ -51,7 +56,8 @@ class SqliteGcbmResultsProvider(GcbmResultsProvider):
                 AND (years.year BETWEEN {start_year} AND {end_year})
             GROUP BY years.year
             ORDER BY years.year
-            """).fetchall()
+            """
+        ).fetchall()
 
         data = OrderedDict()
         for year, value in db_result:
@@ -62,7 +68,9 @@ class SqliteGcbmResultsProvider(GcbmResultsProvider):
     def _find_indicator_table(self, indicator):
         conn = sqlite3.connect(self._path)
         for table, value_col in SqliteGcbmResultsProvider.results_tables.items():
-            if conn.execute(f"SELECT 1 FROM {table} WHERE indicator = ?", [indicator]).fetchone():
+            if conn.execute(
+                f"SELECT 1 FROM {table} WHERE indicator = ?", [indicator]
+            ).fetchone():
                 return table, value_col
 
         return None, None
